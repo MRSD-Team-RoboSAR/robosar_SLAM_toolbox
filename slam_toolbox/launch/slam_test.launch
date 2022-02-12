@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<launch>
+    <!-- Start online_async using provided launch file -->
+    <include file="$(find slam_toolbox)/launch/online_async.launch"/>
+    <!-- Start URG node for LIDAR connected to laptop through USB -->
+    <node name="urg_node" type="urg_node" pkg="urg_node" output="screen"/>
+    <!-- Static tf broadcaster; make odom and base_footprint identical -->
+    <!-- <node name="tf_slam_test_1" type="static_transform_publisher" pkg="tf" args="0 0 0 0 0 0 odom base_footprint 100"/>  -->
+    <!-- Make base_footprint shift over time -->
+    <node name="tf_slam_test_1" type="odom_pub" pkg="odom_pub"/> 
+    <!-- Static tf broadcaster; make base-link and laser identical -->
+    <node name="tf_slam_test_2" type="static_transform_publisher" pkg="tf" args="0 0 0 0 0 0 base_footprint laser 100"/> 
+    <!-- Launch RVIZ with provided configurations -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find slam_toolbox)/config/slam_toolbox_default.rviz" />
+    <!-- Set maximum laser range -->
+    <param name="/slam_toolbox/max_laser_range" type="double" value="4.0" />
+
+</launch>
