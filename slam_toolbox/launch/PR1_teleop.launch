@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<launch>
+    <!-- Launch file for PR1 demo using teleoperation -->
+    <!-- Agent bringup -->
+    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node_quiet.launch"/>
+    <!-- SLAM Toolbox with RVIZ -->
+    <include file="$(find slam_toolbox)/launch/hackathon_rviz.launch"/>
+    <!-- Teleoperation -->
+    <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
+        <remap from="cmd_vel" to="/robosar_agent_bringup_launch/agent1/control"/>
+  </node>
+</launch>

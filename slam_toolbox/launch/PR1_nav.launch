@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<launch>
+    <!-- Launch file for PR1 demo using teleoperation -->
+    <!-- Agent bringup -->
+    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node_quiet.launch"/>
+    <!-- SLAM Toolbox with RVIZ -->
+    <include file="$(find slam_toolbox)/launch/hackathon.launch"/>
+    <!-- Navigation -->
+    <include file="$(find robosar_navigation)/launch/move_base.launch"/>
+</launch>
