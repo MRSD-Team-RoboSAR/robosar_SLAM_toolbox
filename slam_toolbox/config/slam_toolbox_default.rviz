@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Axes2
       Splitter Ratio: 0.5
     Tree Height: 301
   - Class: rviz/Selection
@@ -141,6 +142,15 @@ Visualization Manager:
       Topic: /trajectory
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 1
+      Name: Axes
+      Radius: 0.02500000037252903
+      Reference Frame: map
+      Show Trail: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 237; 237; 237
@@ -169,7 +179,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 18.797332763671875
+      Distance: 9.093137741088867
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -177,17 +187,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -2.7296204566955566
-        Y: -2.763627290725708
+        X: -0.8843324184417725
+        Y: 1.58547043800354
         Z: 0.010089651681482792
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.544796347618103
+      Pitch: 1.5497963428497314
       Target Frame: map
-      Yaw: 3.2550652027130127
+      Yaw: 3.180065155029297
     Saved: ~
 Window Geometry:
   Displays:
@@ -208,4 +218,4 @@ Window Geometry:
     collapsed: false
   Width: 1228
   X: 72
-  Y: 31
+  Y: 27
