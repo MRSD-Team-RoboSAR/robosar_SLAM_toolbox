@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <launch>
     <!-- Agent bringup -->
-    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node_quiet.launch"/>
+    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node.launch"/>
     <!-- Run SLAM Toolbox -->
     <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="screen">
         <rosparam command="load" file="$(find slam_toolbox)/config/robosar_localization.yaml" />
