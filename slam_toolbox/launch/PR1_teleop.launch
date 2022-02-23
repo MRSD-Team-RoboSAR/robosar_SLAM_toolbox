@@ -2,7 +2,7 @@
 <launch>
     <!-- Launch file for PR1 demo using teleoperation -->
     <!-- Agent bringup -->
-    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node_quiet.launch"/>
+    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node.launch"/>
     <!-- SLAM Toolbox with RVIZ -->
     <include file="$(find slam_toolbox)/launch/hackathon_rviz.launch"/>
     <!-- Teleoperation -->
