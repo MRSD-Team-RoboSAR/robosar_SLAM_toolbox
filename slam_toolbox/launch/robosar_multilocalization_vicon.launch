@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<launch>
+    <!-- VICON bridge -->
+    <include file="$(find vicon_bridge)/launch/vicon.launch"/>
+    <!-- VICON static transform -->
+    <node name="tf_vicon_test" type="static_transform_publisher" pkg="tf" args="0 0 0 0 0 0 /vicon/world map 100"/> 
+    <!-- Agent bringup -->
+    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node.launch"/>
+    <!-- Run SLAM Toolbox for each agent -->
+    <include file="$(find slam_toolbox)/launch/robosar_multilocalization_agentN.launch">
+        <arg name="agentN" value="agent1" />
+    </include>
+    <include file="$(find slam_toolbox)/launch/robosar_multilocalization_agentN.launch">
+        <arg name="agentN" value="agent2" />
+    </include>
+    <include file="$(find slam_toolbox)/launch/robosar_multilocalization_agentN.launch">
+        <arg name="agentN" value="agent3" />
+    </include>
+    <!-- Launch RVIZ with provided configurations -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find slam_toolbox)/config/robosar_multilocalization_vicon.rviz" />
+    <!-- Teleoperation -->
+    <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
+        <remap from="cmd_vel" to="/robosar_agent_bringup_launch/agent1/control"/>
+    </node>
+    <!-- Make agents 2 and 3 spin in place -->
+    <node name="pub_agent2" pkg="rostopic" type="rostopic" args="pub -r 1 /robosar_agent_bringup_launch/agent2/control geometry_msgs/Twist -- '[0.0, 0.0, 0.0]' '[0.0, 0.0, 1.0]'"/>
+    <node name="pub_agent3" pkg="rostopic" type="rostopic" args="pub -r 1 /robosar_agent_bringup_launch/agent3/control geometry_msgs/Twist -- '[0.0, 0.0, 0.0]' '[0.0, 0.0, -1.0]'"/>
+</launch>

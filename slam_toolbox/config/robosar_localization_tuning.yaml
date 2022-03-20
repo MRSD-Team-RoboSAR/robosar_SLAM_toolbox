@@ -7,14 +7,14 @@ ceres_dogleg_type: TRADITIONAL_DOGLEG
 ceres_loss_function: None
 
 # ROS Parameters
-odom_frame: odom
 map_frame: map
-base_frame: base_link
+odom_frame: agent1/odom
+base_frame: agent1/base_link
 scan_topic: /robosar_agent_bringup_launch/agent1/feedback/scan
 mode: localization
 
 # if you'd like to start localizing on bringup in a map and pose
-map_file_name: localization_map_vicon
+map_file_name: localization_map_lab
 map_start_pose: [-1.2,0.8,0]
 
 debug_logging: false
@@ -30,13 +30,13 @@ stack_size_to_use: 40000000 #// program needs a larger stack size to serialize l
 
 # General Parameters
 use_scan_matching: true
-use_scan_barycenter: false
-minimum_travel_distance: 0.25
+use_scan_barycenter: true
+minimum_travel_distance: 0.5
 minimum_travel_heading: 0.5
-scan_buffer_size: 10
+scan_buffer_size: 3
 scan_buffer_maximum_scan_distance: 10
-link_match_minimum_response_fine: 0.3
-link_scan_maximum_distance: 3.0
+link_match_minimum_response_fine: 0.1  
+link_scan_maximum_distance: 1.5
 do_loop_closing: true 
 loop_match_minimum_chain_size: 3
 loop_match_maximum_variance_coarse: 3.0  
@@ -55,8 +55,8 @@ loop_search_space_smear_deviation: 0.03
 loop_search_maximum_distance: 5.0
 
 # Scan Matcher Parameters
-distance_variance_penalty: 0.05      
-angle_variance_penalty: 0.1    
+distance_variance_penalty: 0.5      
+angle_variance_penalty: 1.0    
 
 fine_search_angle_offset: 0.00349     
 coarse_search_angle_offset: 0.349   
@@ -64,7 +64,3 @@ coarse_angle_resolution: 0.0349
 minimum_angle_penalty: 0.9
 minimum_distance_penalty: 0.5
 use_response_expansion: true
-
-link_match_minimum_response_fine: 0.1
-link_scan_maximum_distance: 1.5
-
