@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<launch>
+    <!-- Use sim time -->
+    <param name="/use_sim_time" type="boolean" value="true" />
+    <!-- Play bag file -->
+    <node pkg="rosbag" type="play" name="player" args="--clock  /home/jsonglaptop/catkin_ws/bags/edit_vicon_multiloc_10_rpm.bag"/>
+    <!-- Run SLAM Toolbox -->
+    <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox">
+        <rosparam command="load" file="$(find slam_toolbox)/config/robosar_localization_tuning.yaml" />
+    </node>
+    <!-- Set maximum laser range -->
+    <param name="/slam_toolbox/max_laser_range" type="double" value="4.0" />
+    <!-- Launch RVIZ with provided configurations -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find slam_toolbox)/config/robosar_localization_tuning.rviz" />
+    <!-- Get VICON - SLAM Toolbox tf -->
+    <node pkg="tf" type="tf_echo" name="localization_error" args="vicon/k108/k108 agent1/base_link 10" output="screen"/>
+</launch>

@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Axes2
+        - /Axes3
       Splitter Ratio: 0.5
     Tree Height: 301
   - Class: rviz/Selection
@@ -151,6 +152,15 @@ Visualization Manager:
       Reference Frame: map
       Show Trail: false
       Value: true
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 0.4000000059604645
+      Name: Axes
+      Radius: 0.05000000074505806
+      Reference Frame: vicon/k109_lrf/k109_lrf
+      Show Trail: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 237; 237; 237
@@ -187,17 +197,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.8843324184417725
-        Y: 1.58547043800354
+        X: -2.070664405822754
+        Y: -0.9321987628936768
         Z: 0.010089651681482792
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5497963428497314
+      Pitch: 1.5597963333129883
       Target Frame: map
-      Yaw: 3.180065155029297
+      Yaw: 3.1350648403167725
     Saved: ~
 Window Geometry:
   Displays:

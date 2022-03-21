@@ -1,7 +1,10 @@
 digraph G {
-"map" -> "odom"[label="Broadcaster: /slam_toolbox\nAverage rate: 50.200 Hz\nMost recent transform: 1644272352.823 ( -0.185 sec old)\nBuffer length: 4.980 sec\n"];
+"map" -> "agent1/odom"[label="Broadcaster: /localization/agent1/slam_toolbox1\nAverage rate: 50.201 Hz\nMost recent transform: 1647561072.640 ( -0.190 sec old)\nBuffer length: 4.980 sec\n"];
+"map" -> "agent2/odom"[label="Broadcaster: /localization/agent2/slam_toolbox2\nAverage rate: 50.202 Hz\nMost recent transform: 1647561072.633 ( -0.183 sec old)\nBuffer length: 4.960 sec\n"];
+"agent2/odom" -> "agent2/base_link"[label="Broadcaster: /robosar_agent_bringup_launch\nAverage rate: 20.142 Hz\nMost recent transform: 1647561072.410 ( 0.040 sec old)\nBuffer length: 4.915 sec\n"];
+"agent1/odom" -> "agent1/base_link"[label="Broadcaster: /robosar_agent_bringup_launch\nAverage rate: 20.147 Hz\nMost recent transform: 1647561072.414 ( 0.036 sec old)\nBuffer length: 4.914 sec\n"];
 edge [style=invis];
  subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
-"Recorded at time: 1644272352.638"[ shape=plaintext ] ;
+"Recorded at time: 1647561072.451"[ shape=plaintext ] ;
  }->"map";
 }

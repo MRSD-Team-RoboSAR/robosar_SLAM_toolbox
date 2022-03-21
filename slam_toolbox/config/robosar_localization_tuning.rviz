@@ -5,7 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Axes2
+        - /Axes3
       Splitter Ratio: 0.5
     Tree Height: 301
   - Class: rviz/Selection
@@ -87,7 +87,7 @@ Visualization Manager:
       Length: 0.25
       Name: Axes
       Radius: 0.05000000074505806
-      Reference Frame: base_link
+      Reference Frame: agent1/base_link
       Show Trail: false
       Value: true
     - Alpha: 1
@@ -151,6 +151,15 @@ Visualization Manager:
       Reference Frame: map
       Show Trail: false
       Value: true
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 0.5
+      Name: Axes
+      Radius: 0.02500000037252903
+      Reference Frame: vicon/k108/k108
+      Show Trail: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 237; 237; 237
@@ -179,7 +188,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 9.093137741088867
+      Distance: 11.406432151794434
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -187,17 +196,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.8843324184417725
-        Y: 1.58547043800354
+        X: -2.0547804832458496
+        Y: 0.07787761092185974
         Z: 0.010089651681482792
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5497963428497314
+      Pitch: 1.5647963285446167
       Target Frame: map
-      Yaw: 3.180065155029297
+      Yaw: 3.140064001083374
     Saved: ~
 Window Geometry:
   Displays:
