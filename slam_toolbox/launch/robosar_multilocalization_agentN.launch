@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<!-- Localization for a single robot; to be called by robosar_multilocalization.launch -->
 <launch>
     <arg name="agentN"/>
     <!-- Run SLAM Toolbox -->
