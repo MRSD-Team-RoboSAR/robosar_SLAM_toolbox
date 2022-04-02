@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!-- Localization of multiple agents -->
+<launch>
+    <!-- Teleoperation -->
+    <node name="teleop_twist_keyboard3" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
+        <remap from="cmd_vel" to="/robosar_agent_bringup_launch/agent3/control"/>
+    </node>
+    <!-- conda deactivate; rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/robosar_agent_bringup_launch/agent2/control -->
+</launch>
