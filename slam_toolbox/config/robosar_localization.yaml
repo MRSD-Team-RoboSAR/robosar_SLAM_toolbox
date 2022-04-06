@@ -14,7 +14,7 @@ scan_topic: /robosar_agent_bringup_launch/agent1/feedback/scan
 mode: localization
 
 # if you'd like to start localizing on bringup in a map and pose
-map_file_name: scott_test_PR4
+map_file_name: scott_hall
 map_start_pose: [0,0,0]
 
 debug_logging: false
