@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<launch>
+    <!-- Launch file for PR1 demo using teleoperation -->
+    <!-- Agent bringup -->
+    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node.launch"/>
+    <!-- Run SLAM Toolbox for mapping -->
+    <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
+        <rosparam command="load" file="$(find slam_toolbox)/config/scott/robosar_scott_mapping.yaml" />
+    </node>
+    <!-- Set maximum laser range -->
+    <param name="/slam_toolbox/max_laser_range" type="double" value="4.0" />
+    <!-- Launch RVIZ with provided configurations -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find slam_toolbox)/config/robosar_mapping.rviz" />
+    <!-- Teleoperation -->
+    <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
+        <remap from="cmd_vel" to="/robosar_agent_bringup_launch/agent1/control"/>
+  </node>
+</launch>

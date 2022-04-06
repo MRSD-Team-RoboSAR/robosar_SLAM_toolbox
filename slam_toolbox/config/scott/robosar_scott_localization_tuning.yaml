@@ -14,7 +14,7 @@ scan_topic: /robosar_agent_bringup_launch/agent1/feedback/scan
 mode: localization
 
 # if you'd like to start localizing on bringup in a map and pose
-map_file_name: scott_hall
+map_file_name: scott_test_PR4
 map_start_pose: [0,0,0]
 
 debug_logging: false
@@ -55,8 +55,8 @@ loop_search_space_smear_deviation: 0.03
 loop_search_maximum_distance: 5.0
 
 # Scan Matcher Parameters
-distance_variance_penalty: 0.5      
-angle_variance_penalty: 1.0    
+distance_variance_penalty: 0.5
+angle_variance_penalty: 1.0
 
 fine_search_angle_offset: 0.00349     
 coarse_search_angle_offset: 0.349   
