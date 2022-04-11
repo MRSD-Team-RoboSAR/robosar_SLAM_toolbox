@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!-- Localization for a single robot; to be called by robosar_multilocalization.launch -->
+<launch>
+    <arg name="agentN"/>
+    <!-- Run SLAM Toolbox -->
+    <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="screen" ns="localization/$(arg agentN)">
+        <rosparam command="load" file="$(find slam_toolbox)/config/robosar_multilocalization.yaml" />
+        <param name="odom_frame" type="string" value="$(arg agentN)/odom" />
+        <param name="base_frame" type="string" value="$(arg agentN)/base_link" />
+        <param name="scan_topic" type="string" value="/robosar_agent_bringup_launch/$(arg agentN)/feedback/scan" />
+    </node>
+    <!-- Set maximum laser range -->
+    <param name="/localization/$(arg agentN)/slam_toolbox/max_laser_range" type="double" value="4.0" />
+    <!-- Pathing -->
+    <node name="hector_trajectory_server" pkg="hector_trajectory_server" type="hector_trajectory_server" output="screen" ns="localization/$(arg agentN)">
+        <param name="target_frame_name" type="string" value="/map" />
+        <param name="source_frame_name" type="string" value="$(arg agentN)/base_link" />
+        <param name="trajectory_update_rate" type="double" value="5" />
+        <param name="trajectory_publish_rate" type="double" value="5" />
+    </node>
+</launch>
