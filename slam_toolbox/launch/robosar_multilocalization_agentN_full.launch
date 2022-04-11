@@ -7,7 +7,7 @@
         <rosparam command="load" file="$(find slam_toolbox)/config/robosar_multilocalization.yaml" />
         <param name="odom_frame" type="string" value="$(arg agentN)/odom" />
         <param name="base_frame" type="string" value="$(arg agentN)/base_link" />
-        <param name="scan_topic" type="string" value="/robosar_agent_bringup_launch/$(arg agentN)/feedback/scan" />
+        <param name="scan_topic" type="string" value="/robosar_agent_bringup_node/$(arg agentN)/feedback/scan" />
     </node>
     <!-- Set maximum laser range -->
     <param name="/localization/$(arg agentN)/slam_toolbox/max_laser_range" type="double" value="4.0" />
