@@ -2732,6 +2732,7 @@ namespace karto
 		  {
 			  // initialize mapper with range threshold from device
 			  Initialize(pLaserRangeFinder->GetRangeThreshold());
+        pScan->SetCorrectedPoseAndUpdate({1,0,0});
 		  }
 
 		  // get last scan
