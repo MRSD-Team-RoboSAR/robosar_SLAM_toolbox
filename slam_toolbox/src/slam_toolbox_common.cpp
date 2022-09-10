@@ -477,6 +477,33 @@ karto::LocalizedRangeScan* SlamToolbox::addScan(
   // get our localized range scan
   karto::LocalizedRangeScan* range_scan = getLocalizedRangeScan(
     laser, scan, karto_pose);
+  
+  // RoboSAR (Jae) - Wait until transform is available for start
+  static bool first_time = true;
+  if(first_time)
+  {
+    first_time = false;
+    geometry_msgs::TransformStamped AprilTag_relative_tf;
+    bool found_tf = false;
+    while(found_tf == false){
+      try{
+        AprilTag_relative_tf = tf_->lookupTransform("agent1/base_link", "tag_0/agent1", ros::Time(0), ros::Duration(0));
+        found_tf = true;
+      }
+      catch(tf2::TransformException ex)
+      {
+        ROS_INFO("Failed to find AprilTag; trying again");
+        ros::Duration(1.0).sleep();
+      }
+    }
+    // const double yaw = tf2::getYaw(AprilTag_relative_tf.transform.rotation);
+    const double yaw = 0;
+    ROS_INFO("Found AprilTag transform: (%f, %f, %f)", AprilTag_relative_tf.transform.translation.x, AprilTag_relative_tf.transform.translation.y, yaw);
+    range_scan->SetCorrectedPoseAndUpdate({
+      -AprilTag_relative_tf.transform.translation.x, 
+      -AprilTag_relative_tf.transform.translation.y, 
+      yaw});
+  }
 
   // Add the localized range scan to the smapper
   boost::mutex::scoped_lock lock(smapper_mutex_);
