@@ -496,12 +496,11 @@ karto::LocalizedRangeScan* SlamToolbox::addScan(
         ros::Duration(1.0).sleep();
       }
     }
-    // const double yaw = tf2::getYaw(AprilTag_relative_tf.transform.rotation);
-    const double yaw = 0;
+    double yaw = -tf2::getYaw(AprilTag_relative_tf.transform.rotation)-3.14159/2;
     ROS_INFO("Found AprilTag transform: (%f, %f, %f)", AprilTag_relative_tf.transform.translation.x, AprilTag_relative_tf.transform.translation.y, yaw);
     range_scan->SetCorrectedPoseAndUpdate({
-      -AprilTag_relative_tf.transform.translation.x, 
-      -AprilTag_relative_tf.transform.translation.y, 
+      -AprilTag_relative_tf.transform.translation.x*cos(yaw) + AprilTag_relative_tf.transform.translation.y*sin(yaw), 
+      -AprilTag_relative_tf.transform.translation.x*sin(yaw) - AprilTag_relative_tf.transform.translation.y*cos(yaw), 
       yaw});
   }
 
