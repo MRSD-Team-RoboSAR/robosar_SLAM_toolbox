@@ -2763,6 +2763,7 @@ namespace karto
 		  {
 			  return false;
 		  }
+      std::cout << "\r\n";
       std::cout << "[RoboSAR:Mapper:Process] Processing scan: " << pScan->GetSensorName() << "\r\n";
       std::cout << "[RoboSAR:Mapper:Process] pScan, odom pose: "
         << "(" << pScan->GetOdometricPose().GetX()
