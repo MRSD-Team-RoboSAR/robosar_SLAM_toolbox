@@ -179,9 +179,11 @@ void CeresSolver::Compute()
     return;
   }
 
+  std::cout << "[RoboSAR:ceres_solver:Compute] Running optimizer\r\n";
   // populate contraint for static initial pose
   if (!was_constant_set_ && first_node_ != nodes_->end())
   {
+    std::cout << "[RoboSAR:ceres_solver:Compute] Setting first node as constant\r\n";
     ROS_DEBUG("CeresSolver: Setting first node as a constant pose:"
       "%0.2f, %0.2f, %0.2f.", first_node_->second(0),
       first_node_->second(1), first_node_->second(2));
@@ -285,12 +287,14 @@ void CeresSolver::AddNode(karto::Vertex<karto::LocalizedRangeScan>* pVertex)
   Eigen::Vector3d pose2d(pose.GetX(), pose.GetY(), pose.GetHeading());
 
   const int id = pVertex->GetObject()->GetUniqueId();
+  std::cout << "[RoboSAR:ceres_solver:AddNode] Adding node " << id << ": (" << pose.GetX() << ", " << pose.GetY() << ", " << pose.GetHeading() << ")\r\n";
 
   boost::mutex::scoped_lock lock(nodes_mutex_);
   nodes_->insert(std::pair<int,Eigen::Vector3d>(id,pose2d));
 
   if (nodes_->size() == 1)
   {
+    std::cout << "[RoboSAR:ceres_solver:AddNode] Set first node\r\n";
     first_node_ = nodes_->find(id);
   }
 }
@@ -318,6 +322,8 @@ void CeresSolver::AddConstraint(karto::Edge<karto::LocalizedRangeScan>* pEdge)
     ROS_WARN("CeresSolver: Failed to add constraint, could not find nodes.");
     return;
   }
+
+  std::cout << "[RoboSAR:ceres_solver:AddConstraint] Connecting nodes " << node1 << " and " << node2 << "\r\n";
 
   // extract transformation
   karto::LinkInfo* pLinkInfo = (karto::LinkInfo*)(pEdge->GetLabel());

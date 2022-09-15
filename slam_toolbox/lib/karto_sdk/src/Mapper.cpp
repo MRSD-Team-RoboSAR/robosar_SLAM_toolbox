@@ -1589,6 +1589,7 @@ namespace karto
         }
         else
         {
+          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Detected loop closure\r\n";
           m_pMapper->FireBeginLoopClosure("Closing loop...");
 
           pScan->SetSensorPose(bestPose);
@@ -2762,6 +2763,16 @@ namespace karto
 		  {
 			  return false;
 		  }
+      std::cout << "[RoboSAR:Mapper:Process] Processing scan: " << pScan->GetSensorName() << "\r\n";
+      std::cout << "[RoboSAR:Mapper:Process] pScan, odom pose: "
+        << "(" << pScan->GetOdometricPose().GetX()
+        << ", " << pScan->GetOdometricPose().GetY()
+        << ", " << pScan->GetOdometricPose().GetHeading()
+        << ")\r\n";
+      if (pLastScan != NULL)
+        std::cout << "[RoboSAR:Mapper:Process] Last       scan: " << pLastScan->GetSensorName() << "\r\n";
+      else
+        std::cout << "[RoboSAR:Mapper:Process] No previous scan available\r\n";
 
 		  Matrix3 covariance;
 		  covariance.SetToIdentity();
