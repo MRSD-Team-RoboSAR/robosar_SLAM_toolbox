@@ -2787,6 +2787,14 @@ namespace karto
 					  bestPose,
 					  covariance);
 			  pScan->SetSensorPose(bestPose);
+        std::cout << "[RoboSAR:Mapper:Process] Scan match"
+          << "\r\n    bestpose: "
+          << "(" << pScan->GetCorrectedPose().GetX()
+          << ", " << pScan->GetCorrectedPose().GetY()
+          << ", " << pScan->GetCorrectedPose().GetHeading()
+          << ")\r\n"
+          << "    covariance  : [" << covariance(0,0) << ", " << covariance(0,1) << ", " << covariance(0,2) << ", " 
+          << covariance(1,1) << ", " << covariance(1,2) << ", " << covariance(2,2) << "]\r\n";
 		  }
 
 		  // add scan to buffer and assign id
