@@ -162,7 +162,7 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
   {
     ROS_INFO("Subscribing to scan: %s", it->c_str());
     scan_filter_subs_.push_back(std::make_unique<message_filters::Subscriber<sensor_msgs::LaserScan> >(node, *it, 5));
-    scan_filters_.push_back(std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_subs_.back(), *tf_, odom_frame_, 5, node));
+    scan_filters_.push_back(std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_subs_.back(), *tf_, odom_frame_, 5, node)); // TODO: CURRENTLY FILTERS MESSAGES ORIGINATING IN odom_frame_; make it multirobot friendly
     scan_filters_.back()->registerCallback(boost::bind(&SlamToolbox::laserCallback, this, _1));
   }
 }
@@ -676,7 +676,7 @@ void SlamToolbox::loadSerializedPoseGraph(
       ROS_INFO("Waiting for incoming scan to get metadata...");
       boost::shared_ptr<sensor_msgs::LaserScan const> scan =
         ros::topic::waitForMessage<sensor_msgs::LaserScan>(
-        laser_topics_.front(), ros::Duration(1.0));
+        laser_topics_.front() /* TODO: Fix so it doesn't just use front */, ros::Duration(1.0));
       if (scan)
       {
         ROS_INFO("Got scan!");
