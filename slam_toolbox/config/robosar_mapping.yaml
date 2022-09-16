@@ -11,7 +11,7 @@ map_frame: map
 # odom_frame: agent1/odom
 # base_frame: agent1/base_link
 # scan_topic: /robosar_agent_bringup_launch/agent1/feedback/scan
-laser_topics: ["/robosar_agent_bringup_node/agent1/feedback/scan"]
+laser_topics: ["/robosar_agent_bringup_node/agent1/feedback/scan", "/robosar_agent_bringup_node/agent2/feedback/scan"]
 mode: mapping
 
 # if you'd like to immediately start continuing a map at a given pose
