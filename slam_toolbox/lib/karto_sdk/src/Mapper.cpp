@@ -1501,10 +1501,12 @@ namespace karto
       forEach(std::vector<Name>, &deviceNames)
       {
         const Name& rCandidateSensorName = *iter;
+        std::cout << "[RoboSAR:Mapper:AddEdges] Comparing " << rSensorName << " to " << rCandidateSensorName << "\r\n";
 
         // skip if candidate device is the same or other device has no scans
         if ((rCandidateSensorName == rSensorName) || (pSensorManager->GetScans(rCandidateSensorName).empty()))
         {
+          std::cout << "[RoboSAR:Mapper:AddEdges] skipping...\r\n";
           continue;
         }
 
@@ -1513,6 +1515,9 @@ namespace karto
         kt_double response = m_pMapper->m_pSequentialScanMatcher->MatchScan<LocalizedRangeScanMap>(pScan,
                                                                   pSensorManager->GetScans(rCandidateSensorName),
                                                                   bestPose, covariance);
+        std::cout << "[RoboSAR:Mapper:AddEdges] Connecting " << rSensorName << " and " << rCandidateSensorName 
+          << " (response = " << response << ", pose = ["
+          << bestPose.GetX() << ", " << bestPose.GetY() << ", " << bestPose.GetHeading() << "])\r\n";
         LinkScans(pSensorManager->GetScan(rCandidateSensorName, 0), pScan, bestPose, covariance);
 
         // only add to means and covariances if response was high "enough"
