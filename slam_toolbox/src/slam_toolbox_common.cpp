@@ -124,9 +124,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 /*****************************************************************************/
 {
   map_to_odom_.setIdentity();
-  private_nh.param("odom_frame", odom_frame_, std::string("odom")); // TODO: Remove, use odom_frames_ instead
   private_nh.param("map_frame", map_frame_, std::string("map"));
-  private_nh.param("base_frame", base_frame_, std::string("base_footprint")); // TODO: Remove, use base_frames_ instead
   private_nh.param("resolution", resolution_, 0.05);
   private_nh.param("map_name", map_name_, std::string("/map"));
   std::vector<std::string> default_laser = {"/scan"};
