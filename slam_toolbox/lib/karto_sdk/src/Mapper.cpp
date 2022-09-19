@@ -2803,6 +2803,34 @@ namespace karto
 					  m_pGraph->TryCloseLoop(pScan, *iter);
 				  }
 			  }
+        std::cout << "[RoboSAR:Mapper:Process] Printing the final graph\r\n";
+
+        // if we want to take vertices from different sources?? What does Name stand for?
+        // std::map<karto::Name,std::map<int,karto::Vertex<karto::LocalizedRangeScan>*>> myGraph = m_pGraph->GetVertices();
+        // std::map<karto::Name,std::map<int,karto::Vertex<karto::LocalizedRangeScan>*>>::iterator itr1;
+        // for(itr1 = myGraph.begin(); itr1 != myGraph.end(); ++itr1){
+        //   std::cout<<"Printing map from :"<<itr1->first<<"\r\n";
+        //   std::map<int,karto::Vertex<karto::LocalizedRangeScan>*>::iterator itr2;
+        //   for(itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2){
+        //     std::vector<karto::Edge<karto::LocalizedRangeScan>*> myEdges = itr2->second->GetEdges();
+        //     std::vector<karto::Edge<karto::LocalizedRangeScan>*>::iterator itr3;
+        //     for(itr3 = myEdges.begin(); itr3 != myEdges.end(); ++itr3){
+        //       const int edge_src = (*itr3)->GetSource()->GetObject()->GetUniqueId();
+        //       const int edge_target = (*itr3)->GetTarget()->GetObject()->GetUniqueId();
+        //       std::cout<<edge_src<<"-"<<edge_target;
+        //     }
+        //     std::cout<<"\r\n";
+        //   }
+        // }
+
+        std::vector<karto::Edge<karto::LocalizedRangeScan>*> myEdges = m_pGraph->GetEdges();
+        std::vector<karto::Edge<karto::LocalizedRangeScan>*>::iterator edge_iterator;
+        for(edge_iterator = myEdges.begin(); edge_iterator != myEdges.end(); ++edge_iterator){
+              const int edge_src = (*edge_iterator)->GetSource()->GetObject()->GetUniqueId();
+              const int edge_target = (*edge_iterator)->GetTarget()->GetObject()->GetUniqueId();
+              std::cout<<edge_src<<"-"<<edge_target<<"\r\n";
+        }
+        std::cout << "[RoboSAR:Mapper:Process] Finished printing the graph\r\n";
 		  }
 
 		  m_pMapperSensorManager->SetLastScan(pScan);
