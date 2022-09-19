@@ -207,7 +207,7 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
       boost::mutex::scoped_lock lock(map_to_odom_mutex_);
       geometry_msgs::TransformStamped msg;
       tf2::convert(map_to_odom_, msg.transform);
-      msg.child_frame_id = odom_frame_;
+      msg.child_frame_id = map_to_odom_child_frame_id_;
       msg.header.frame_id = map_frame_;
       msg.header.stamp = ros::Time::now() + transform_timeout_;
       tfB_->sendTransform(msg);
@@ -372,6 +372,11 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   const bool& update_reprocessing_transform)
 /*****************************************************************************/
 {
+  std::string odom_frame;
+  if(header.frame_id == "agent1/base_link") // TODO: Make not hard coded
+    odom_frame = "agent1/odom";
+  else
+    odom_frame = "agent2/odom";
   // Compute the map->odom transform
   const ros::Time& t = header.stamp;
   tf2::Stamped<tf2::Transform> odom_to_map;
@@ -379,12 +384,12 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   q.setRPY(0., 0., corrected_pose.GetHeading());
   tf2::Stamped<tf2::Transform> base_to_map(
     tf2::Transform(q, tf2::Vector3(corrected_pose.GetX(),
-    corrected_pose.GetY(), 0.0)).inverse(), t, base_frame_);
+    corrected_pose.GetY(), 0.0)).inverse(), t, header.frame_id); // Assumes base frame = laser frame
   try
   {
     geometry_msgs::TransformStamped base_to_map_msg, odom_to_map_msg;
     tf2::convert(base_to_map, base_to_map_msg);
-    odom_to_map_msg = tf_->transform(base_to_map_msg, odom_frame_);
+    odom_to_map_msg = tf_->transform(base_to_map_msg, odom_frame);
     tf2::convert(odom_to_map_msg, odom_to_map);
   }
   catch(tf2::TransformException& e)
@@ -412,6 +417,7 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   boost::mutex::scoped_lock lock(map_to_odom_mutex_);
   map_to_odom_ = tf2::Transform(tf2::Quaternion( odom_to_map.getRotation() ),
     tf2::Vector3( odom_to_map.getOrigin() ) ).inverse();
+  map_to_odom_child_frame_id_ = odom_frame;
 
   return odom_to_map;
 }
