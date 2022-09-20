@@ -1501,10 +1501,12 @@ namespace karto
       forEach(std::vector<Name>, &deviceNames)
       {
         const Name& rCandidateSensorName = *iter;
+        std::cout << "[RoboSAR:Mapper:AddEdges] Comparing " << rSensorName << " to " << rCandidateSensorName << "\r\n";
 
         // skip if candidate device is the same or other device has no scans
         if ((rCandidateSensorName == rSensorName) || (pSensorManager->GetScans(rCandidateSensorName).empty()))
         {
+          std::cout << "[RoboSAR:Mapper:AddEdges] skipping...\r\n";
           continue;
         }
 
@@ -1513,6 +1515,9 @@ namespace karto
         kt_double response = m_pMapper->m_pSequentialScanMatcher->MatchScan<LocalizedRangeScanMap>(pScan,
                                                                   pSensorManager->GetScans(rCandidateSensorName),
                                                                   bestPose, covariance);
+        std::cout << "[RoboSAR:Mapper:AddEdges] Connecting " << rSensorName << " and " << rCandidateSensorName 
+          << " (response = " << response << ", pose = ["
+          << bestPose.GetX() << ", " << bestPose.GetY() << ", " << bestPose.GetHeading() << "])\r\n";
         LinkScans(pScan, pSensorManager->GetScan(rCandidateSensorName, 0), bestPose, covariance);
 
         // only add to means and covariances if response was high "enough"
@@ -1589,6 +1594,7 @@ namespace karto
         }
         else
         {
+          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Detected loop closure\r\n";
           m_pMapper->FireBeginLoopClosure("Closing loop...");
 
           pScan->SetSensorPose(bestPose);
@@ -2749,6 +2755,17 @@ namespace karto
 		  {
 			  return false;
 		  }
+      std::cout << "\r\n";
+      std::cout << "[RoboSAR:Mapper:Process] Processing scan: " << pScan->GetSensorName() << "\r\n";
+      std::cout << "[RoboSAR:Mapper:Process] pScan, odom pose: "
+        << "(" << pScan->GetOdometricPose().GetX()
+        << ", " << pScan->GetOdometricPose().GetY()
+        << ", " << pScan->GetOdometricPose().GetHeading()
+        << ")\r\n";
+      if (pLastScan != NULL)
+        std::cout << "[RoboSAR:Mapper:Process] Last       scan: " << pLastScan->GetSensorName() << "\r\n";
+      else
+        std::cout << "[RoboSAR:Mapper:Process] No previous scan available\r\n";
 
 		  Matrix3 covariance;
 		  covariance.SetToIdentity();
@@ -2762,6 +2779,14 @@ namespace karto
 					  bestPose,
 					  covariance);
 			  pScan->SetSensorPose(bestPose);
+        std::cout << "[RoboSAR:Mapper:Process] Scan match"
+          << "\r\n    bestpose: "
+          << "(" << pScan->GetCorrectedPose().GetX()
+          << ", " << pScan->GetCorrectedPose().GetY()
+          << ", " << pScan->GetCorrectedPose().GetHeading()
+          << ")\r\n"
+          << "    covariance  : [" << covariance(0,0) << ", " << covariance(0,1) << ", " << covariance(0,2) << ", " 
+          << covariance(1,1) << ", " << covariance(1,2) << ", " << covariance(2,2) << "]\r\n";
 		  }
 
 		  // add scan to buffer and assign id
@@ -2783,6 +2808,34 @@ namespace karto
 					  m_pGraph->TryCloseLoop(pScan, *iter);
 				  }
 			  }
+        std::cout << "[RoboSAR:Mapper:Process] Printing the final graph\r\n";
+
+        // if we want to take vertices from different sources?? What does Name stand for?
+        // std::map<karto::Name,std::map<int,karto::Vertex<karto::LocalizedRangeScan>*>> myGraph = m_pGraph->GetVertices();
+        // std::map<karto::Name,std::map<int,karto::Vertex<karto::LocalizedRangeScan>*>>::iterator itr1;
+        // for(itr1 = myGraph.begin(); itr1 != myGraph.end(); ++itr1){
+        //   std::cout<<"Printing map from :"<<itr1->first<<"\r\n";
+        //   std::map<int,karto::Vertex<karto::LocalizedRangeScan>*>::iterator itr2;
+        //   for(itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2){
+        //     std::vector<karto::Edge<karto::LocalizedRangeScan>*> myEdges = itr2->second->GetEdges();
+        //     std::vector<karto::Edge<karto::LocalizedRangeScan>*>::iterator itr3;
+        //     for(itr3 = myEdges.begin(); itr3 != myEdges.end(); ++itr3){
+        //       const int edge_src = (*itr3)->GetSource()->GetObject()->GetUniqueId();
+        //       const int edge_target = (*itr3)->GetTarget()->GetObject()->GetUniqueId();
+        //       std::cout<<edge_src<<"-"<<edge_target;
+        //     }
+        //     std::cout<<"\r\n";
+        //   }
+        // }
+
+        std::vector<karto::Edge<karto::LocalizedRangeScan>*> myEdges = m_pGraph->GetEdges();
+        std::vector<karto::Edge<karto::LocalizedRangeScan>*>::iterator edge_iterator;
+        for(edge_iterator = myEdges.begin(); edge_iterator != myEdges.end(); ++edge_iterator){
+              const int edge_src = (*edge_iterator)->GetSource()->GetObject()->GetUniqueId();
+              const int edge_target = (*edge_iterator)->GetTarget()->GetObject()->GetUniqueId();
+              std::cout<<edge_src<<"-"<<edge_target<<"\r\n";
+        }
+        std::cout << "[RoboSAR:Mapper:Process] Finished printing the graph\r\n";
 		  }
 
 		  m_pMapperSensorManager->SetLastScan(pScan);
