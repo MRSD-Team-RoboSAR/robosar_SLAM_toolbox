@@ -378,11 +378,9 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   const bool& update_reprocessing_transform)
 /*****************************************************************************/
 {
-  std::string odom_frame;
-  if(header.frame_id == "agent1/base_link") // TODO: Make not hard coded
-    odom_frame = "agent1/odom";
-  else
-    odom_frame = "agent2/odom";
+  // Turn base frame into odom frame
+  std::string agent_name = header.frame_id.substr(0, header.frame_id.find("/"));
+  std::string odom_frame = agent_name + "/" + "odom"; // TODO: Make not hard coded
   // Compute the map->odom transform
   const ros::Time& t = header.stamp;
   tf2::Stamped<tf2::Transform> odom_to_map;
