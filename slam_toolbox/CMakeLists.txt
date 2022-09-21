@@ -30,6 +30,7 @@ find_package(catkin REQUIRED
     interactive_markers
     map_server
     slam_toolbox_msgs
+    apriltag_ros
 )
 
 find_package(PkgConfig REQUIRED)
@@ -92,6 +93,11 @@ target_link_libraries(ceres_solver_plugin ${catkin_LIBRARIES}
                                           ${Boost_LIBRARIES}
                                           ${TBB_LIBRARIES}
 )
+
+### Marker publisher
+# add_library(marker_publisher src/marker_publisher.cpp)
+add_executable(marker_publisher src/marker_publisher.cpp)
+target_link_libraries(marker_publisher ${catkin_LIBRARIES})
 
 #### Tool lib for mapping
 add_library(toolbox_common src/slam_toolbox_common.cpp src/map_saver.cpp src/loop_closure_assistant.cpp src/laser_utils.cpp src/slam_mapper.cpp)
