@@ -1,11 +1,11 @@
 #include "ros/ros.h"
 #include "visualization_msgs/Marker.h"
-#include "std_msgs/String.h"
-#include <string>
+#include "apriltag_ros/AprilTagDetectionArray.h"
+#include "apriltag_ros/AprilTagDetection.h"
 
 ros::Publisher msg_pub;
 
-void msgCallback(const std_msgs::String::ConstPtr& msg)
+void msgCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& msg)
 {
   visualization_msgs::Marker m;
   m.header.frame_id = "map";
@@ -17,9 +17,9 @@ void msgCallback(const std_msgs::String::ConstPtr& msg)
   // what to do
   m.action = 0; // Add/modify
   // pose
-  m.pose.position.x = std::stof(msg->data);
-  m.pose.position.y = 1;
-  m.pose.position.z = 0.5;
+  m.pose.position.x = msg->detections[0].pose.pose.pose.position.x;
+  m.pose.position.y = msg->detections[0].pose.pose.pose.position.y;
+  m.pose.position.z = msg->detections[0].pose.pose.pose.position.z;
   m.pose.orientation.x = m.pose.orientation.y = m.pose.orientation.z = 0;
   m.pose.orientation.w = 1;
   // size
