@@ -8,10 +8,10 @@ ros::Publisher msg_pub;
 void msgCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& msg)
 {
   visualization_msgs::Marker m;
-  m.header.frame_id = "map";
+  m.header.frame_id = msg->header.frame_id;
   // label
-  m.ns = "my_namespace";
-  m.id = 1234321;
+  m.ns = msg->header.frame_id;
+  m.id = msg->detections[0].id[0];
   // shape
   m.type = 2; // Sphere
   // what to do
