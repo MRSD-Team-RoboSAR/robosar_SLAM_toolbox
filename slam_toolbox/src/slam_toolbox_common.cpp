@@ -40,10 +40,18 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
   setROSInterfaces(nh_);
   setSolver(nh_);
 
-  laser_assistant_ = std::make_unique<laser_utils::LaserAssistant>(
-    nh_, tf_.get(), base_frame_);
-  pose_helper_ = std::make_unique<pose_utils::GetPoseHelper>(
-    tf_.get(), base_frame_, odom_frame_);
+  if(base_frames_.size() != laser_topics_.size())
+    ROS_FATAL("[RoboSAR:slam_toolbox_common:SlamToolbox] base_frames_.size() != laser_topics_.size()");
+  if(base_frames_.size() != odom_frames_.size())
+    ROS_FATAL("[RoboSAR:slam_toolbox_common:SlamToolbox] base_frames_.size() != odom_frames_.size()");
+  assert(base_frames_.size() == laser_topics_.size());
+  assert(base_frames_.size() == odom_frames_.size());
+
+  for(size_t idx = 0; idx < base_frames_.size(); idx++)
+  {
+    pose_helpers_.push_back(std::make_unique<pose_utils::GetPoseHelper>(tf_.get(), base_frames_[idx], odom_frames_[idx]));
+    laser_assistants_[base_frames_[idx]] = std::make_unique<laser_utils::LaserAssistant>(nh_, tf_.get(), base_frames_[idx]); // Assumes base frame = laser frame
+  }
   scan_holder_ = std::make_unique<laser_utils::ScanHolder>(lasers_);
   map_saver_ = std::make_unique<map_saver::MapSaver>(nh_, map_name_);
   closure_assistant_ =
@@ -74,8 +82,15 @@ SlamToolbox::~SlamToolbox()
   dataset_.reset();
   closure_assistant_.reset();
   map_saver_.reset();
-  pose_helper_.reset();
-  laser_assistant_.reset();
+  for(size_t idx = 0; idx < pose_helpers_.size(); idx++)
+  {
+    pose_helpers_[idx].reset();
+    // laser_assistants_.reset();
+  }
+  for(std::map<std::string,std::unique_ptr<laser_utils::LaserAssistant>>::iterator it = laser_assistants_.begin(); it != laser_assistants_.end(); it++)
+  {
+    it->second.reset();
+  }
   scan_holder_.reset();
 }
 
@@ -109,12 +124,24 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 /*****************************************************************************/
 {
   map_to_odom_.setIdentity();
-  private_nh.param("odom_frame", odom_frame_, std::string("odom"));
   private_nh.param("map_frame", map_frame_, std::string("map"));
-  private_nh.param("base_frame", base_frame_, std::string("base_footprint"));
   private_nh.param("resolution", resolution_, 0.05);
   private_nh.param("map_name", map_name_, std::string("/map"));
-  private_nh.param("scan_topic", scan_topic_, std::string("/scan"));
+  std::vector<std::string> default_laser = {"/scan"};
+  if (!private_nh.getParam("laser_topics", laser_topics_))
+  {
+    laser_topics_ = default_laser;
+  }
+  std::vector<std::string> default_base_frame = {"base_footprint"};
+  if (!private_nh.getParam("base_frames", base_frames_))
+  {
+    base_frames_ = default_base_frame;
+  }
+  std::vector<std::string> default_odom_frame = {"odom"};
+  if (!private_nh.getParam("odom_frames", odom_frames_))
+  {
+    odom_frames_ = default_odom_frame;
+  }
   private_nh.param("throttle_scans", throttle_scans_, 1);
   private_nh.param("enable_interactive_mode", enable_interactive_mode_, false);
 
@@ -153,9 +180,13 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
   ssPauseMeasurements_ = node.advertiseService("pause_new_measurements", &SlamToolbox::pauseNewMeasurementsCallback, this);
   ssSerialize_ = node.advertiseService("serialize_map", &SlamToolbox::serializePoseGraphCallback, this);
   ssDesserialize_ = node.advertiseService("deserialize_map", &SlamToolbox::deserializePoseGraphCallback, this);
-  scan_filter_sub_ = std::make_unique<message_filters::Subscriber<sensor_msgs::LaserScan> >(node, scan_topic_, 5);
-  scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_sub_, *tf_, odom_frame_, 5, node);
-  scan_filter_->registerCallback(boost::bind(&SlamToolbox::laserCallback, this, _1));
+  for(size_t idx = 0; idx < laser_topics_.size(); idx++)
+  {
+    ROS_INFO("Subscribing to scan: %s", laser_topics_[idx].c_str());
+    scan_filter_subs_.push_back(std::make_unique<message_filters::Subscriber<sensor_msgs::LaserScan> >(node, laser_topics_[idx], 5));
+    scan_filters_.push_back(std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_subs_.back(), *tf_, odom_frames_[idx], 5, node));
+    scan_filters_.back()->registerCallback(boost::bind(&SlamToolbox::laserCallback, this, _1));
+  }
 }
 
 /*****************************************************************************/
@@ -172,12 +203,20 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
   {
     {
       boost::mutex::scoped_lock lock(map_to_odom_mutex_);
-      geometry_msgs::TransformStamped msg;
-      tf2::convert(map_to_odom_, msg.transform);
-      msg.child_frame_id = odom_frame_;
-      msg.header.frame_id = map_frame_;
-      msg.header.stamp = ros::Time::now() + transform_timeout_;
-      tfB_->sendTransform(msg);
+      // Update with / add latest transform
+      if(map_to_odom_child_frame_id_.length() > 0)
+        m_map_to_odoms_[map_to_odom_child_frame_id_] = map_to_odom_;
+      // Publish all past and current transforms so none of them go stale
+      std::map<std::string, tf2::Transform>::iterator iter;
+      for(iter = m_map_to_odoms_.begin(); iter != m_map_to_odoms_.end(); iter++)
+      {
+        geometry_msgs::TransformStamped msg;
+        tf2::convert(iter->second, msg.transform);
+        msg.child_frame_id = iter->first;
+        msg.header.frame_id = map_frame_;
+        msg.header.stamp = ros::Time::now() + transform_timeout_;
+        tfB_->sendTransform(msg);
+      }
     }
     r.sleep();
   }
@@ -290,7 +329,7 @@ karto::LaserRangeFinder* SlamToolbox::getLaser(const
   {
     try
     {
-      lasers_[frame] = laser_assistant_->toLaserMetadata(*scan);
+      lasers_[frame] = laser_assistants_[frame]->toLaserMetadata(*scan);
       dataset_->Add(lasers_[frame].getLaser(), true);
     }
     catch (tf2::TransformException& e)
@@ -335,22 +374,26 @@ bool SlamToolbox::updateMap()
 tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   const karto::Pose2& corrected_pose,
   const karto::Pose2& karto_pose,
-  const ros::Time& t,
+  const std_msgs::Header& header,
   const bool& update_reprocessing_transform)
 /*****************************************************************************/
 {
+  // Turn base frame into odom frame
+  std::string agent_name = header.frame_id.substr(0, header.frame_id.find("/"));
+  std::string odom_frame = agent_name + "/" + "odom"; // TODO: Make not hard coded
   // Compute the map->odom transform
+  const ros::Time& t = header.stamp;
   tf2::Stamped<tf2::Transform> odom_to_map;
   tf2::Quaternion q(0.,0.,0.,1.0);
   q.setRPY(0., 0., corrected_pose.GetHeading());
   tf2::Stamped<tf2::Transform> base_to_map(
     tf2::Transform(q, tf2::Vector3(corrected_pose.GetX(),
-    corrected_pose.GetY(), 0.0)).inverse(), t, base_frame_);
+    corrected_pose.GetY(), 0.0)).inverse(), t, header.frame_id); // Assumes base frame = laser frame
   try
   {
     geometry_msgs::TransformStamped base_to_map_msg, odom_to_map_msg;
     tf2::convert(base_to_map, base_to_map_msg);
-    odom_to_map_msg = tf_->transform(base_to_map_msg, odom_frame_);
+    odom_to_map_msg = tf_->transform(base_to_map_msg, odom_frame);
     tf2::convert(odom_to_map_msg, odom_to_map);
   }
   catch(tf2::TransformException& e)
@@ -378,6 +421,7 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   boost::mutex::scoped_lock lock(map_to_odom_mutex_);
   map_to_odom_ = tf2::Transform(tf2::Quaternion( odom_to_map.getRotation() ),
     tf2::Vector3( odom_to_map.getOrigin() ) ).inverse();
+  map_to_odom_child_frame_id_ = odom_frame;
 
   return odom_to_map;
 }
@@ -524,7 +568,7 @@ karto::LocalizedRangeScan* SlamToolbox::addScan(
     }
 
     setTransformFromPoses(range_scan->GetCorrectedPose(), karto_pose,
-      scan->header.stamp, update_reprocessing_transform);
+      scan->header, update_reprocessing_transform);
     dataset_->Add(range_scan);
   }
   else
@@ -667,14 +711,14 @@ void SlamToolbox::loadSerializedPoseGraph(
       ROS_INFO("Waiting for incoming scan to get metadata...");
       boost::shared_ptr<sensor_msgs::LaserScan const> scan =
         ros::topic::waitForMessage<sensor_msgs::LaserScan>(
-        scan_topic_, ros::Duration(1.0));
+        laser_topics_.front() /* TODO: Fix so it doesn't just use front */, ros::Duration(1.0));
       if (scan)
       {
         ROS_INFO("Got scan!");
         try
         {
           lasers_[scan->header.frame_id] =
-            laser_assistant_->toLaserMetadata(*scan);
+            laser_assistants_[scan->header.frame_id]->toLaserMetadata(*scan);
           break;
         }
         catch (tf2::TransformException& e)
