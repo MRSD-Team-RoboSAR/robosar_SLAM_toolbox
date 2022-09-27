@@ -55,7 +55,8 @@ void SynchronousSlamToolbox::run()
           (int)q_.size());
       }
 
-      addScan(getLaser(scan_w_pose.scan), scan_w_pose);
+      karto::LocalizedRangeScan* karto_scan = addScan(getLaser(scan_w_pose.scan), scan_w_pose);
+      addTag(scan_w_pose.apriltags, karto_scan);
       continue;
     }
 
@@ -90,13 +91,31 @@ void SynchronousSlamToolbox::laserCallback(
     return;
   }
 
+  std::string frame_id = scan->header.frame_id;
+
   // if sync and valid, add to queue
   if (shouldProcessScan(scan, pose))
   {
-    q_.push(PosedScan(scan, pose));
+    // find if apriltag was detected for agent, assumes laser_frame = apriltag_frame
+    if (apriltags_q_.find(frame_id) != apriltags_q_.end() && !apriltags_q_[frame_id].empty()) {
+      q_.push(PosedScan(scan, pose, apriltags_q_[frame_id].front()));
+      apriltags_q_[frame_id].pop();
+    } else {
+      q_.push(PosedScan(scan, pose));
+    }
   }
 
   return;
+}
+
+/*****************************************************************************/
+void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltags) {
+/*****************************************************************************/
+  std::string frame_id = apriltags->header.frame_id;
+  if (apriltags_q_.find(frame_id) == apriltags_q_.end())
+    apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
+  apriltags_q_[frame_id].push(apriltags);
+  ROS_INFO("Apriltags received in frame %s", frame_id.c_str());
 }
 
 /*****************************************************************************/

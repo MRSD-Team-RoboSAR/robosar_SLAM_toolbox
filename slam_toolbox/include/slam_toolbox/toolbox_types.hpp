@@ -29,6 +29,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "slam_toolbox/toolbox_msgs.hpp"
 #include "karto_sdk/Mapper.h"
+#include "apriltag_ros/AprilTagDetectionArray.h"
 
 // compute linear index for given map coords
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
@@ -40,11 +41,17 @@ namespace toolbox_types
 struct PosedScan
 {
   PosedScan(sensor_msgs::LaserScan::ConstPtr scan_in, karto::Pose2 pose_in) :
-             scan(scan_in), pose(pose_in) 
+             scan(scan_in), pose(pose_in)
+  {
+    apriltags = nullptr;
+  }
+  PosedScan(sensor_msgs::LaserScan::ConstPtr scan_in, karto::Pose2 pose_in, apriltag_ros::AprilTagDetectionArray::ConstPtr apriltags_in) :
+             scan(scan_in), pose(pose_in), apriltags(apriltags_in)
   {
   }
   sensor_msgs::LaserScan::ConstPtr scan;
   karto::Pose2 pose;
+  apriltag_ros::AprilTagDetectionArray::ConstPtr apriltags;
 };
 
 // object containing a vertex pointer and an updated score
