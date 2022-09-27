@@ -38,12 +38,13 @@ protected:
   bool clearQueueCallback(slam_toolbox_msgs::ClearQueue::Request& req, slam_toolbox_msgs::ClearQueue::Response& resp);
   virtual bool deserializePoseGraphCallback(slam_toolbox_msgs::DeserializePoseGraph::Request& req,
     slam_toolbox_msgs::DeserializePoseGraph::Response& resp) override final;
+  bool shouldProcessTag(std:: string frame_id);
 
   std::queue<PosedScan> q_;
-  std::unordered_map<std::string, std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr> > apriltags_q_;
+  std::map<std::string, std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr> > apriltags_q_;
   ros::ServiceServer ssClear_;
   boost::mutex apriltag_q_mutex_;
-  bool should_process;
+  std::map<std::string, bool> should_process_;
 };
 
 }

@@ -95,10 +95,10 @@ void SynchronousSlamToolbox::laserCallback(
   std::string frame_id;
   std::getline(ss, frame_id, '/');
   boost::mutex::scoped_lock lock(apriltag_q_mutex_);
-  should_process = shouldProcessScan(scan, pose);
+  should_process_[frame_id] = shouldProcessScan(scan, pose);
 
   // if sync and valid, add to queue
-  if (should_process)
+  if (should_process_[frame_id])
   {
     // find if apriltag was detected for agent, assumes laser_frame = apriltag_frame
     if (apriltags_q_.find(frame_id) != apriltags_q_.end() && !apriltags_q_[frame_id].empty()) {
@@ -118,16 +118,23 @@ void SynchronousSlamToolbox::laserCallback(
 void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltags) {
 /*****************************************************************************/
   boost::mutex::scoped_lock lock(apriltag_q_mutex_);
-  if (should_process && apriltags->detections.size() > 0 && apriltags->detections[0].id.size() > 0) {
-    std::stringstream ss(apriltags->header.frame_id);
-    std::string frame_id;
-    std::getline(ss, frame_id, '/');
+  std::stringstream ss(apriltags->header.frame_id);
+  std::string frame_id;
+  std::getline(ss, frame_id, '/');
+  if (shouldProcessTag(frame_id) && apriltags->detections.size() > 0 && apriltags->detections[0].id.size() > 0) {
     if (apriltags_q_.find(frame_id) == apriltags_q_.end())
       apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
     apriltags_q_[frame_id].push(apriltags);
     ROS_INFO("Apriltag %d received in frame %s", apriltags->detections[0].id[0], frame_id.c_str());
-    should_process = false;
+    should_process_[frame_id] = false;
   }
+}
+
+/*****************************************************************************/
+bool SynchronousSlamToolbox::shouldProcessTag(std:: string frame_id) {
+/*****************************************************************************/
+  if (should_process_.find(frame_id) == should_process_.end()) return false;
+  return should_process_[frame_id];
 }
 
 /*****************************************************************************/
