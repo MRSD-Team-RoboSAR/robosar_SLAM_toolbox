@@ -91,7 +91,7 @@ protected:
   bool updateMap();
   tf2::Stamped<tf2::Transform> setTransformFromPoses(const karto::Pose2& pose,
     const karto::Pose2& karto_pose, const std_msgs::Header& header, const bool& update_reprocessing_transform);
-  tf2::Stamped<tf2::Transform> setTagTransformFromPoses(int tag_id, const karto::Pose2& corrected_pose);
+  tf2::Stamped<tf2::Transform> setTagTransformFromPoses(int tag_id);
   karto::LocalizedRangeScan* getLocalizedRangeScan(karto::LaserRangeFinder* laser,
     const sensor_msgs::LaserScan::ConstPtr& scan,
     karto::Pose2& karto_pose);
@@ -112,7 +112,7 @@ protected:
   std::vector<std::unique_ptr<tf2_ros::MessageFilter<sensor_msgs::LaserScan> > > scan_filters_;
   std::vector<std::unique_ptr<message_filters::Subscriber<apriltag_ros::AprilTagDetectionArray> > > apriltag_subs_;
   std::vector<std::unique_ptr<apriltag_ros::AprilTagDetectionArray> > apriltags_;
-  ros::Publisher sst_, sstm_;
+  ros::Publisher sst_, sstm_, tag_pub_;
   ros::ServiceServer ssMap_, ssPauseMeasurements_, ssSerialize_, ssDesserialize_;
 
   // Storage for ROS parameters

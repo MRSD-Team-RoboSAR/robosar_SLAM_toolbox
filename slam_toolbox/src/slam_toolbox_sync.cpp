@@ -56,7 +56,8 @@ void SynchronousSlamToolbox::run()
       }
 
       karto::LocalizedRangeScan* karto_scan = addScan(getLaser(scan_w_pose.scan), scan_w_pose);
-      addTag(scan_w_pose.apriltags, karto_scan);
+      if (karto_scan) 
+        addTag(scan_w_pose.apriltags, karto_scan);
       continue;
     }
 

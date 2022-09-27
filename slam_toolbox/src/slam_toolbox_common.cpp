@@ -181,6 +181,7 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
   tfB_ = std::make_unique<tf2_ros::TransformBroadcaster>();
   sst_ = node.advertise<nav_msgs::OccupancyGrid>(map_name_, 1, true);
   sstm_ = node.advertise<nav_msgs::MapMetaData>(map_name_ + "_metadata", 1, true);
+  tag_pub_ = node.advertise<visualization_msgs::Marker>("victim_markers", 100, true);
   ssMap_ = node.advertiseService("dynamic_map", &SlamToolbox::mapCallback, this);
   ssPauseMeasurements_ = node.advertiseService("pause_new_measurements", &SlamToolbox::pauseNewMeasurementsCallback, this);
   ssSerialize_ = node.advertiseService("serialize_map", &SlamToolbox::serializePoseGraphCallback, this);
@@ -228,7 +229,12 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
       }
     }
 
-    // TODO: publish apriltag tfs
+    {
+      std::map<int, std::pair<geometry_msgs::PoseWithCovarianceStamped, karto::LocalizedRangeScan*>>::iterator iter;
+      for (iter = m_apriltag_to_scan_.begin(); iter != m_apriltag_to_scan_.end(); iter++) {
+        setTagTransformFromPoses(iter->first);
+      }
+    }
 
     r.sleep();
   }
@@ -440,26 +446,53 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
 
 
 /*****************************************************************************/
-tf2::Stamped<tf2::Transform> SlamToolbox::setTagTransformFromPoses(int tag_id, const karto::Pose2& corrected_pose) {
+tf2::Stamped<tf2::Transform> SlamToolbox::setTagTransformFromPoses(int tag_id) {
 /*****************************************************************************/
-  // boost::mutex::scoped_lock lock(map_to_tags_mutex_);
-  // geometry_msgs::PoseWithCovarianceStamped scan_to_tag = m_apriltag_to_scan_[tag_id].first;
-  // // Compute the map->base transform
-  // const ros::Time& t = scan_to_tag.header.stamp;
-  // tf2::Quaternion q(0.,0.,0.,1.0);
-  // q.setRPY(0., 0., corrected_pose.GetHeading());
-  // tf2::Transform map_to_base(q, tf2::Vector3(corrected_pose.GetX(), corrected_pose.GetY(), 0.0));
-  // // Compute the base->tag transform, base = scan
-  // geometry_msgs::Quaternion sq = scan_to_tag.pose.pose.orientation;
-  // geometry_msgs::Point sp = scan_to_tag.pose.pose.position;
-  // tf2::Transform base_to_tag(tf2::Quaternion(sq.x, sq.y, sq.z, sq.w), tf2::Vector3(sp.x, sp.y, sp.z));
-  // tf2::Transform map_to_tag = map_to_base * base_to_tag;
-  // tf2::Stamped<tf2::Transform> map_to_tag_msg(map_to_tag, t, map_frame_); // Assumes base frame = laser frame
+  boost::mutex::scoped_lock lock(map_to_tags_mutex_);
+  geometry_msgs::PoseWithCovarianceStamped scan_to_tag = m_apriltag_to_scan_[tag_id].first;
+  karto::Pose2 corrected_pose = m_apriltag_to_scan_[tag_id].second->GetCorrectedPose();
+  
+  // Compute the map->base transform
+  const ros::Time& t = scan_to_tag.header.stamp;
+  tf2::Quaternion q(0.,0.,0.,1.0);
+  q.setRPY(0., 0., corrected_pose.GetHeading());
+  tf2::Transform map_to_base(q, tf2::Vector3(corrected_pose.GetX(), corrected_pose.GetY(), 0.0));
+  // Compute the base->tag transform, base = scan
+  geometry_msgs::Quaternion sq = scan_to_tag.pose.pose.orientation;
+  geometry_msgs::Point sp = scan_to_tag.pose.pose.position;
+  tf2::Transform base_to_tag(tf2::Quaternion(sq.x, sq.y, sq.z, sq.w), tf2::Vector3(sp.x, sp.y, sp.z));
+  tf2::Transform map_to_tag = map_to_base * base_to_tag;
+  tf2::Stamped<tf2::Transform> map_to_tag_msg(map_to_tag, t, map_frame_); // Assumes base frame = laser frame
   
   ROS_INFO("Apriltag %d tf calculated.", tag_id);
 
-  // m_map_to_tags_[tag_id] = map_to_tag;
-  return tf2::Stamped<tf2::Transform>();
+  // Publish marker
+  visualization_msgs::Marker m;
+  tf2::Vector3 pos = map_to_tag.getOrigin();
+  m.pose.position.x = pos[0];
+  m.pose.position.y = pos[1];
+  m.pose.position.z = pos[2];
+  tf2::Quaternion quat = map_to_tag.getRotation();
+  m.pose.orientation.x = 0;
+  m.pose.orientation.y = 0;
+  m.pose.orientation.z = 0;
+  m.pose.orientation.w = 1;
+  m.header.frame_id = map_to_tag_msg.frame_id_;
+  m.ns = map_to_tag_msg.frame_id_;
+  m.id = tag_id;
+  m.type = 2;
+  m.action = 0;
+  m.scale.x = 0.3;
+  m.scale.y = 0.3;
+  m.scale.z = 0.3;
+  m.color.r = 1;
+  m.color.g = 0;
+  m.color.b = 1;
+  m.color.a = 1;
+  m.lifetime = ros::Duration(0); // forever
+  tag_pub_.publish(m);
+  
+  return map_to_tag_msg;
 }
 
 /*****************************************************************************/
@@ -622,11 +655,12 @@ void SlamToolbox::addTag(apriltag_ros::AprilTagDetectionArray::ConstPtr& aprilta
   if (apriltag == nullptr) return;
   boost::mutex::scoped_lock lock_a(apriltag_mutex_);
   boost::mutex::scoped_lock lock_s(smapper_mutex_);
+  if (scan == nullptr) ROS_ERROR("\r\n\r\n\r\n\r\n\r\n**** SCAN POINTER IS NULL ****\r\n\r\n\r\n\r\n\r\n");
   for (apriltag_ros::AprilTagDetection tag : apriltag->detections) {
     // assume not group of tags
     if (m_apriltag_to_scan_.find(tag.id[0]) == m_apriltag_to_scan_.end())
       m_apriltag_to_scan_[tag.id[0]] = std::make_pair(tag.pose, scan);
-    setTagTransformFromPoses(tag.id[0], scan->GetCorrectedPose());
+    setTagTransformFromPoses(tag.id[0]);
   }
 }
  
