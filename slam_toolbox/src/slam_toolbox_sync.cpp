@@ -106,6 +106,7 @@ void SynchronousSlamToolbox::laserCallback(
       q_.push(PosedScan(scan, pose, apriltags_q_[frame_id].front()));
       apriltags_q_[frame_id].pop();
     } else {
+      ROS_INFO("scan processed");
       q_.push(PosedScan(scan, pose));
     }
   }
@@ -116,15 +117,16 @@ void SynchronousSlamToolbox::laserCallback(
 /*****************************************************************************/
 void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltags) {
 /*****************************************************************************/
-  if (should_process) {
+  boost::mutex::scoped_lock lock(apriltag_q_mutex_);
+  if (should_process && apriltags->detections.size() > 0 && apriltags->detections[0].id.size() > 0) {
     std::stringstream ss(apriltags->header.frame_id);
     std::string frame_id;
     std::getline(ss, frame_id, '/');
-    boost::mutex::scoped_lock lock(apriltag_q_mutex_);
     if (apriltags_q_.find(frame_id) == apriltags_q_.end())
       apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
     apriltags_q_[frame_id].push(apriltags);
     ROS_INFO("Apriltag %d received in frame %s", apriltags->detections[0].id[0], frame_id.c_str());
+    should_process = false;
   }
 }
 
