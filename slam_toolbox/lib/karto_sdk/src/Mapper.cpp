@@ -2783,21 +2783,21 @@ namespace karto
 		  if (m_pUseScanMatching->GetValue())
 		  {
 			  // add to graph
-        m_pGraph->AddVertex(pScan);
+			  m_pGraph->AddVertex(pScan);
 			  m_pGraph->AddEdges(pScan, covariance);
 
 			  m_pMapperSensorManager->AddRunningScan(pScan);
 
 			  if (m_pDoLoopClosing->GetValue())
 			  {
-          std::vector<Name> deviceNames;
-          if(m_pLoopCloseAcrossAgents->GetValue()){
-            deviceNames = m_pMapperSensorManager->GetSensorNames();
-          }
-          else{
-            karto::Name current_sensor_name = pScan->GetSensorName();
-            deviceNames.push_back(current_sensor_name);
-          }
+			    std::vector<Name> deviceNames;
+			    if(m_pLoopCloseAcrossAgents->GetValue()){
+			      deviceNames = m_pMapperSensorManager->GetSensorNames();
+			    }
+			    else{
+			      karto::Name current_sensor_name = pScan->GetSensorName();
+			      deviceNames.push_back(current_sensor_name);
+			    }
 
 				  const_forEach(std::vector<Name>, &deviceNames)
 				  {
