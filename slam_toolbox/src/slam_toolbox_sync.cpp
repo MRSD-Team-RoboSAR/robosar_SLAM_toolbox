@@ -91,13 +91,18 @@ void SynchronousSlamToolbox::laserCallback(
     return;
   }
 
-  std::string frame_id = scan->header.frame_id;
+  std::stringstream ss(scan->header.frame_id);
+  std::string frame_id;
+  std::getline(ss, frame_id, '/');
+  boost::mutex::scoped_lock lock(apriltag_q_mutex_);
+  should_process = shouldProcessScan(scan, pose);
 
   // if sync and valid, add to queue
-  if (shouldProcessScan(scan, pose))
+  if (should_process)
   {
     // find if apriltag was detected for agent, assumes laser_frame = apriltag_frame
     if (apriltags_q_.find(frame_id) != apriltags_q_.end() && !apriltags_q_[frame_id].empty()) {
+      ROS_INFO("frame: %s", frame_id.c_str());
       q_.push(PosedScan(scan, pose, apriltags_q_[frame_id].front()));
       apriltags_q_[frame_id].pop();
     } else {
@@ -111,11 +116,16 @@ void SynchronousSlamToolbox::laserCallback(
 /*****************************************************************************/
 void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltags) {
 /*****************************************************************************/
-  std::string frame_id = apriltags->header.frame_id;
-  if (apriltags_q_.find(frame_id) == apriltags_q_.end())
-    apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
-  apriltags_q_[frame_id].push(apriltags);
-  ROS_INFO("Apriltags received in frame %s", frame_id.c_str());
+  if (should_process) {
+    std::stringstream ss(apriltags->header.frame_id);
+    std::string frame_id;
+    std::getline(ss, frame_id, '/');
+    boost::mutex::scoped_lock lock(apriltag_q_mutex_);
+    if (apriltags_q_.find(frame_id) == apriltags_q_.end())
+      apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
+    apriltags_q_[frame_id].push(apriltags);
+    ROS_INFO("Apriltag %d received in frame %s", apriltags->detections[0].id[0], frame_id.c_str());
+  }
 }
 
 /*****************************************************************************/

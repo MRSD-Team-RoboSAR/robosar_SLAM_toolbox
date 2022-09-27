@@ -42,6 +42,8 @@ protected:
   std::queue<PosedScan> q_;
   std::unordered_map<std::string, std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr> > apriltags_q_;
   ros::ServiceServer ssClear_;
+  boost::mutex apriltag_q_mutex_;
+  bool should_process;
 };
 
 }
