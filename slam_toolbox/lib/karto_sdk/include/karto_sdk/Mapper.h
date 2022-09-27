@@ -2315,6 +2315,12 @@ namespace karto
      */
     Parameter<kt_double>* m_pLoopSearchSpaceSmearDeviation;
 
+    /**
+     * Whether to perform loop closure across multiple agents.
+     * Default value is true
+     */
+    Parameter<kt_bool>* m_pLoopCloseAcrossAgents;
+
     //////////////////////////////////////////////////////////////////////////////
     // ScanMatcherParameters;
 
@@ -2415,6 +2421,7 @@ namespace karto
     double getParamLoopSearchSpaceDimension();
     double getParamLoopSearchSpaceResolution();
     double getParamLoopSearchSpaceSmearDeviation();
+    bool getParamLoopCloseAcrossAgents();
 
     // Scan Matcher Parameters
     double getParamDistanceVariancePenalty();
@@ -2453,6 +2460,7 @@ namespace karto
     void setParamLoopSearchSpaceDimension(double d);
     void setParamLoopSearchSpaceResolution(double d);
     void setParamLoopSearchSpaceSmearDeviation(double d);
+    void setParamLoopCloseAcrossAgents(bool b);
 
     // Scan Matcher Parameters
     void setParamDistanceVariancePenalty(double d);
