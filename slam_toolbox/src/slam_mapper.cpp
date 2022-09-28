@@ -227,6 +227,12 @@ void SMapper::configure(const ros::NodeHandle& nh)
     mapper_->setParamLoopSearchSpaceSmearDeviation(loop_search_space_smear_deviation);
   }
 
+  bool loop_close_across_agents;
+  if(nh.getParam("loop_close_across_agents", loop_close_across_agents))
+  {
+    mapper_->setParamLoopCloseAcrossAgents(loop_close_across_agents);
+  }
+
   // Setting Scan Matcher Parameters
   double distance_variance_penalty;
   if(nh.getParam("distance_variance_penalty", distance_variance_penalty))

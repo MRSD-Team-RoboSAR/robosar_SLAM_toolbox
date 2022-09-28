@@ -2278,6 +2278,10 @@ namespace karto
         "smoother response.",
         0.03, GetParameterManager());
 
+    m_pLoopCloseAcrossAgents = new Parameter<kt_bool>(
+        "LoopCloseAcrossAgents",
+        "Whether to perform loop closure across multiple agents",
+        true, GetParameterManager());
     //////////////////////////////////////////////////////////////////////////////
     // ScanMatcherParameters;
 
@@ -2439,6 +2443,11 @@ namespace karto
     return static_cast<double>(m_pLoopSearchSpaceSmearDeviation->GetValue());
   }
 
+  bool Mapper::getParamLoopCloseAcrossAgents()
+  {
+    return static_cast<bool>(m_pLoopCloseAcrossAgents->GetValue());
+  }
+
   // ScanMatcher Parameters
 
   double Mapper::getParamDistanceVariancePenalty()
@@ -2591,6 +2600,10 @@ namespace karto
     m_pLoopSearchSpaceSmearDeviation->SetValue((kt_double)d);
   }
 
+  void Mapper::setParamLoopCloseAcrossAgents(bool b)
+  {
+    m_pLoopCloseAcrossAgents->SetValue((kt_bool)b);
+  }
 
   // Scan Matcher Parameters
   void Mapper::setParamDistanceVariancePenalty(double d)
@@ -2777,7 +2790,15 @@ namespace karto
 
 			  if (m_pDoLoopClosing->GetValue())
 			  {
-				  std::vector<Name> deviceNames = m_pMapperSensorManager->GetSensorNames();
+			    std::vector<Name> deviceNames;
+			    if(m_pLoopCloseAcrossAgents->GetValue()){
+			      deviceNames = m_pMapperSensorManager->GetSensorNames();
+			    }
+			    else{
+			      karto::Name current_sensor_name = pScan->GetSensorName();
+			      deviceNames.push_back(current_sensor_name);
+			    }
+
 				  const_forEach(std::vector<Name>, &deviceNames)
 				  {
 					  m_pGraph->TryCloseLoop(pScan, *iter);
@@ -2855,8 +2876,14 @@ namespace karto
 
         if (m_pDoLoopClosing->GetValue())
         {
-          std::vector<Name> deviceNames =
-            m_pMapperSensorManager->GetSensorNames();
+          std::vector<Name> deviceNames;
+          if(m_pLoopCloseAcrossAgents->GetValue()){
+            deviceNames = m_pMapperSensorManager->GetSensorNames();
+          }
+          else{
+            karto::Name current_sensor_name = pScan->GetSensorName();
+            deviceNames.push_back(current_sensor_name);
+          }
           const_forEach(std::vector<Name>, &deviceNames)
           {
             m_pGraph->TryCloseLoop(pScan, *iter);
@@ -2947,7 +2974,14 @@ namespace karto
       
       if (m_pDoLoopClosing->GetValue())
       {
-        std::vector<Name> deviceNames = m_pMapperSensorManager->GetSensorNames();
+        std::vector<Name> deviceNames;
+        if(m_pLoopCloseAcrossAgents->GetValue()){
+            deviceNames = m_pMapperSensorManager->GetSensorNames();
+        }
+        else{
+            karto::Name current_sensor_name = pScan->GetSensorName();
+            deviceNames.push_back(current_sensor_name);
+        }
         const_forEach(std::vector<Name>, &deviceNames)
         {
           m_pGraph->TryCloseLoop(pScan, *iter);
@@ -3141,8 +3175,14 @@ namespace karto
 
         if (m_pDoLoopClosing->GetValue())
         {
-          std::vector<Name> deviceNames =
-          m_pMapperSensorManager->GetSensorNames();
+          std::vector<Name> deviceNames;
+          if(m_pLoopCloseAcrossAgents->GetValue()){
+              deviceNames = m_pMapperSensorManager->GetSensorNames();
+          }
+          else{
+              karto::Name current_sensor_name = pScan->GetSensorName();
+              deviceNames.push_back(current_sensor_name);
+          }
           const_forEach(std::vector<Name>, &deviceNames)
           {
             m_pGraph->TryCloseLoop(pScan, *iter);
