@@ -145,6 +145,23 @@ void LoopClosureAssistant::publishGraph()
 
   for (ConstGraphIterator it = graph->begin(); it != graph->end(); ++it)
   {
+    // Get sensor name
+    karto::Name sensor_name = mapper_->GetMapperSensorManager()->GetScan(it->first)->GetSensorName();
+    // Determine if sensor name has been seen before
+    std::map<karto::Name, std_msgs::ColorRGBA>::iterator color_map_it = SensorColorMap.find(sensor_name);
+    if (color_map_it == SensorColorMap.end())
+    {
+      // New sensor; create new color
+      std_msgs::ColorRGBA new_color;
+      new_color.r = (float)(rand() % 100) / 100;
+      new_color.g = (float)(rand() % 100) / 100;
+      new_color.b = (float)(rand() % 100) / 100;
+      new_color.a = 1;
+      SensorColorMap[sensor_name] = new_color;
+    }
+    // Assign color
+    m.color = SensorColorMap[sensor_name];
+    // Assign ID and position
     m.id = it->first + 1;
     m.pose.position.x = it->second(0);
     m.pose.position.y = it->second(1);

@@ -70,6 +70,7 @@ private:
   std::string map_frame_;
   PausedState& state_;
   ProcessType& processor_type_;
+  std::map<karto::Name, std_msgs::ColorRGBA> SensorColorMap;
 };
 
 }  // end namespace
