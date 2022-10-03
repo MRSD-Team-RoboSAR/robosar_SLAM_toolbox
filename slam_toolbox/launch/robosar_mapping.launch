@@ -5,7 +5,7 @@
     <!-- Agent bringup -->
     <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node.launch"/>
     <!-- Run SLAM Toolbox for mapping -->
-    <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
+    <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
         <rosparam command="load" file="$(find slam_toolbox)/config/robosar_mapping.yaml" />
         <param name="odom_frame" type="string" value="$(arg agentN)/odom" />
         <param name="base_frame" type="string" value="$(arg agentN)/base_link" />
@@ -18,5 +18,5 @@
     <!-- Teleoperation -->
     <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
         <remap from="cmd_vel" to="/robosar_agent_bringup_node/$(arg agentN)/control"/>
-  </node>
+    </node>
 </launch>
