@@ -164,6 +164,46 @@ void LoopClosureAssistant::publishGraph()
     }
   }
 
+  // Get edges
+  std::vector<karto::Edge<karto::LocalizedRangeScan>*> graph_edges = mapper_->GetGraph()->GetEdges();
+  // Create marker for edge
+  visualization_msgs::Marker edge_marker;
+  edge_marker.header.frame_id = "map";
+  edge_marker.header.stamp = ros::Time::now();
+  edge_marker.ns = "slam_toolbox/graph_edges";
+  edge_marker.type = visualization_msgs::Marker::LINE_LIST;
+  edge_marker.pose.position.x = 0.0;
+  edge_marker.pose.position.y = 0.0;
+  edge_marker.pose.position.z = 0.0;
+  edge_marker.pose.orientation.w = 1.;
+  edge_marker.scale.x = 0.02;
+  edge_marker.color.r = 0;
+  edge_marker.color.g = 0.7;
+  edge_marker.color.b = 0.3;
+  edge_marker.color.a = 0.3;
+  edge_marker.action = visualization_msgs::Marker::ADD;
+  edge_marker.lifetime = ros::Duration(0.);
+  // Go through all edges
+  std::vector<karto::Edge<karto::LocalizedRangeScan>*>::iterator edge_iterator;
+  for(edge_iterator = graph_edges.begin(); edge_iterator != graph_edges.end(); ++edge_iterator){
+    // Get ids
+    const int id_src = (*edge_iterator)->GetSource()->GetObject()->GetUniqueId();
+    const int id_target = (*edge_iterator)->GetTarget()->GetObject()->GetUniqueId();
+    // Get nodes
+    Eigen::Vector3d pose_src, pose_target;
+    pose_src = graph->at(id_src);
+    pose_target = graph->at(id_target);
+    // Convert to points
+    geometry_msgs::Point pt_src, pt_target;
+    pt_src.x = pose_src(0); pt_src.y = pose_src(1);
+    pt_target.x = pose_target(0); pt_target.y = pose_target(1);
+    // Push to points field in msg
+    edge_marker.points.push_back(pt_src);
+    edge_marker.points.push_back(pt_target);
+  }
+  // Push msg to array
+  marray.markers.push_back(edge_marker);
+
   // if disabled, clears out old markers
   interactive_server_->applyChanges();
   marker_publisher_.publish(marray);
