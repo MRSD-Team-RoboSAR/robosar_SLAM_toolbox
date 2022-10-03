@@ -167,22 +167,12 @@ void LoopClosureAssistant::publishGraph()
   // Get edges
   std::vector<karto::Edge<karto::LocalizedRangeScan>*> graph_edges = mapper_->GetGraph()->GetEdges();
   // Create marker for edge
-  visualization_msgs::Marker edge_marker;
-  edge_marker.header.frame_id = "map";
-  edge_marker.header.stamp = ros::Time::now();
-  edge_marker.ns = "slam_toolbox/graph_edges";
+  visualization_msgs::Marker edge_marker  = vis_utils::toMarker(map_frame_, "slam_toolbox/graph_edges", 0.02);
   edge_marker.type = visualization_msgs::Marker::LINE_LIST;
-  edge_marker.pose.position.x = 0.0;
-  edge_marker.pose.position.y = 0.0;
-  edge_marker.pose.position.z = 0.0;
-  edge_marker.pose.orientation.w = 1.;
-  edge_marker.scale.x = 0.02;
   edge_marker.color.r = 0;
   edge_marker.color.g = 0.7;
   edge_marker.color.b = 0.3;
   edge_marker.color.a = 0.3;
-  edge_marker.action = visualization_msgs::Marker::ADD;
-  edge_marker.lifetime = ros::Duration(0.);
   // Go through all edges
   std::vector<karto::Edge<karto::LocalizedRangeScan>*>::iterator edge_iterator;
   for(edge_iterator = graph_edges.begin(); edge_iterator != graph_edges.end(); ++edge_iterator){
