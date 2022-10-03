@@ -145,6 +145,23 @@ void LoopClosureAssistant::publishGraph()
 
   for (ConstGraphIterator it = graph->begin(); it != graph->end(); ++it)
   {
+    // Get sensor name
+    karto::Name sensor_name = mapper_->GetMapperSensorManager()->GetScan(it->first)->GetSensorName();
+    // Determine if sensor name has been seen before
+    std::map<karto::Name, std_msgs::ColorRGBA>::iterator color_map_it = SensorColorMap.find(sensor_name);
+    if (color_map_it == SensorColorMap.end())
+    {
+      // New sensor; create new color
+      std_msgs::ColorRGBA new_color;
+      new_color.r = (float)(rand() % 100) / 100;
+      new_color.g = (float)(rand() % 100) / 100;
+      new_color.b = (float)(rand() % 100) / 100;
+      new_color.a = 1;
+      SensorColorMap[sensor_name] = new_color;
+    }
+    // Assign color
+    m.color = SensorColorMap[sensor_name];
+    // Assign ID and position
     m.id = it->first + 1;
     m.pose.position.x = it->second(0);
     m.pose.position.y = it->second(1);
@@ -163,6 +180,72 @@ void LoopClosureAssistant::publishGraph()
       marray.markers.push_back(m);
     }
   }
+
+  // Get edges
+  std::vector<karto::Edge<karto::LocalizedRangeScan>*> graph_edges = mapper_->GetGraph()->GetEdges();
+  // Create markers for edge
+  visualization_msgs::Marker edge_adj_marker  = vis_utils::toMarker(map_frame_, "slam_toolbox/graph_edges", 0.02);
+  edge_adj_marker.type = visualization_msgs::Marker::LINE_LIST;
+  edge_adj_marker.id = 0;
+  edge_adj_marker.color.r = 0;
+  edge_adj_marker.color.g = 0.7;
+  edge_adj_marker.color.b = 0;
+  edge_adj_marker.color.a = 0.3;
+  visualization_msgs::Marker edge_loop_marker  = vis_utils::toMarker(map_frame_, "slam_toolbox/graph_edges", 0.02);
+  edge_loop_marker.type = visualization_msgs::Marker::LINE_LIST;
+  edge_loop_marker.id = 1;
+  edge_loop_marker.color.r = 0;
+  edge_loop_marker.color.g = 0;
+  edge_loop_marker.color.b = 0.7;
+  edge_loop_marker.color.a = 0.3;
+  visualization_msgs::Marker edge_cross_marker  = vis_utils::toMarker(map_frame_, "slam_toolbox/graph_edges", 0.02);
+  edge_cross_marker.type = visualization_msgs::Marker::LINE_LIST;
+  edge_cross_marker.id = 2;
+  edge_cross_marker.color.r = 0.7;
+  edge_cross_marker.color.g = 0;
+  edge_cross_marker.color.b = 0;
+  edge_cross_marker.color.a = 0.3;
+  // Go through all edges
+  std::vector<karto::Edge<karto::LocalizedRangeScan>*>::iterator edge_iterator;
+  for(edge_iterator = graph_edges.begin(); edge_iterator != graph_edges.end(); ++edge_iterator){
+    // Get scans
+    karto::LocalizedRangeScan *pScan_src = (*edge_iterator)->GetSource()->GetObject();
+    karto::LocalizedRangeScan *pScan_target = (*edge_iterator)->GetTarget()->GetObject();
+    // Get unique ids
+    const int id_src = pScan_src->GetUniqueId();
+    const int id_target = pScan_target->GetUniqueId();
+    // Get nodes
+    Eigen::Vector3d pose_src, pose_target;
+    pose_src = graph->at(id_src);
+    pose_target = graph->at(id_target);
+    // Convert to points
+    geometry_msgs::Point pt_src, pt_target;
+    pt_src.x = pose_src(0); pt_src.y = pose_src(1);
+    pt_target.x = pose_target(0); pt_target.y = pose_target(1);
+    // Push to points field in appropriate msg
+    if(pScan_src->GetSensorName() != pScan_target->GetSensorName())
+    {
+      // Nodes across different agents
+      edge_cross_marker.points.push_back(pt_src);
+      edge_cross_marker.points.push_back(pt_target);
+    }
+    else if(abs(pScan_src->GetStateId() - pScan_target->GetStateId()) > 1)
+    {
+      // Non-adjacent nodes
+      edge_loop_marker.points.push_back(pt_src);
+      edge_loop_marker.points.push_back(pt_target);
+    }
+    else
+    {
+      // Adjacent nodes
+      edge_adj_marker.points.push_back(pt_src);
+      edge_adj_marker.points.push_back(pt_target);
+    }
+  }
+  // Push msgs to array
+  marray.markers.push_back(edge_adj_marker);
+  marray.markers.push_back(edge_loop_marker);
+  marray.markers.push_back(edge_cross_marker);
 
   // if disabled, clears out old markers
   interactive_server_->applyChanges();
