@@ -1518,7 +1518,7 @@ namespace karto
         std::cout << "[RoboSAR:Mapper:AddEdges] Connecting " << rSensorName << " and " << rCandidateSensorName 
           << " (response = " << response << ", pose = ["
           << bestPose.GetX() << ", " << bestPose.GetY() << ", " << bestPose.GetHeading() << "])\r\n";
-        LinkScans(pScan, pSensorManager->GetScan(rCandidateSensorName, 0), bestPose, covariance);
+        LinkScans(pSensorManager->GetScan(rCandidateSensorName, 0), pScan, bestPose, covariance);
 
         // only add to means and covariances if response was high "enough"
         if (response > m_pMapper->m_pLinkMatchMinimumResponseFine->GetValue())
