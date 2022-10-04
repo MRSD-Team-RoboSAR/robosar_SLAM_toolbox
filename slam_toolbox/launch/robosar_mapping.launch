@@ -7,16 +7,13 @@
     <!-- Run SLAM Toolbox for mapping -->
     <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
         <rosparam command="load" file="$(find slam_toolbox)/config/robosar_mapping.yaml" />
-        <param name="odom_frame" type="string" value="$(arg agentN)/odom" />
-        <param name="base_frame" type="string" value="$(arg agentN)/base_link" />
-        <param name="scan_topic" type="string" value="/robosar_agent_bringup_node/$(arg agentN)/feedback/scan" />
     </node>
     <!-- Set maximum laser range -->
     <param name="/slam_toolbox/max_laser_range" type="double" value="4.0" />
     <!-- Launch RVIZ with provided configurations -->
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find slam_toolbox)/config/robosar_mapping.rviz" />
     <!-- Teleoperation -->
-    <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
-        <remap from="cmd_vel" to="/robosar_agent_bringup_node/$(arg agentN)/control"/>
+    <node name="teleop_twist_keyboard_1" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
+        <remap from="cmd_vel" to="/robosar_agent_bringup_node/$(arg agentN)/cmd_vel"/>
     </node>
 </launch>
