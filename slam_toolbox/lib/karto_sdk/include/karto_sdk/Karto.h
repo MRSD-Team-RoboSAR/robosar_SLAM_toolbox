@@ -5769,9 +5769,9 @@ namespace karto
             kt_double angle = scanPose.GetHeading() + minimumAngle + beamNum * angularResolution;
 
             Vector2<kt_double> point;
-            point.SetX(scanPose.GetX() + (rangeReading * cos(angle)));
-            point.SetY(scanPose.GetY() + (rangeReading * sin(angle)));
 
+            point.SetX(scanPose.GetX() + (rangeThreshold * cos(angle)));
+            point.SetY(scanPose.GetY() + (rangeThreshold * sin(angle)));
             m_UnfilteredPointReadings.push_back(point);
             continue;
           }
@@ -6282,13 +6282,13 @@ namespace karto
         kt_double rangeReading = pScan->GetRangeReadings()[pointIndex];
         kt_bool isEndPointValid = rangeReading < (rangeThreshold - KT_TOLERANCE);
 
-        if (rangeReading <= minRange || rangeReading >= maxRange || std::isnan(rangeReading))
+        if (rangeReading <= minRange || std::isnan(rangeReading))
         {
           // ignore these readings
           pointIndex++;
           continue;
         }
-        else if (rangeReading >= rangeThreshold)
+        else if (rangeReading >= rangeThreshold && rangeReading < maxRange)
         {
           // trace up to range reading
           kt_double ratio = rangeThreshold / rangeReading;
@@ -6297,7 +6297,6 @@ namespace karto
           point.SetX(scanPosition.GetX() + ratio * dx);
           point.SetY(scanPosition.GetY() + ratio * dy);
         }
-
         kt_bool isInMap = RayTrace(scanPosition, point, isEndPointValid, doUpdate);
         if (!isInMap)
         {
