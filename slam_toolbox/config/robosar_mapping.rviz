@@ -288,7 +288,7 @@ Visualization Manager:
     - Class: rviz/SetGoal
       Topic: /move_base_simple/goal
     - Class: rviz/PublishPoint
-      Single click: true
+      Single click: false
       Topic: /clicked_point
   Value: true
   Views:
