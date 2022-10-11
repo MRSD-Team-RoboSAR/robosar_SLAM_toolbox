@@ -1594,7 +1594,7 @@ namespace karto
         }
         else
         {
-          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Detected loop closure\r\n";
+          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Detected loop closure (resp = " << fineResponse << ")\r\n";
           m_pMapper->FireBeginLoopClosure("Closing loop...");
 
           pScan->SetSensorPose(bestPose);
