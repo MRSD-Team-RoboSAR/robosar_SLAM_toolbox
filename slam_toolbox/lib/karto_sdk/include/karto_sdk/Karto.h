@@ -6280,10 +6280,16 @@ namespace karto
       {
         Vector2<kt_double> point = *pointsIter;
         kt_double rangeReading = pScan->GetRangeReadings()[pointIndex];
-        kt_bool isEndPointValid = rangeReading < (rangeThreshold - KT_TOLERANCE);
 
-        if (rangeReading <= minRange || std::isnan(rangeReading))
+        // lidar was giving range reading as 0 instead of infinity for points out of range
+        // thus condition of end point validity needed to be changed from having only a upper bound to being in a range
+        kt_bool isEndPointValid = math::InRange(rangeReading, pLaserRangeFinder->GetMinimumRange(), rangeThreshold - KT_TOLERANCE)
+
+        if (std::isnan(rangeReading))
         {
+          // only ignore readings which are nan.
+          // For out of range readings, point has been set to rangeThreshold in update function
+          // and endpoint is invalid but we still want to add the line to the grid
           // ignore these readings
           pointIndex++;
           continue;
