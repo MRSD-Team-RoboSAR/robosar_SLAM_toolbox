@@ -1510,7 +1510,7 @@ namespace karto
 
         Pose2 bestPose;
         Matrix3 covariance;
-        kt_double response = m_pMapper->m_pSequentialScanMatcher->MatchScan<LocalizedRangeScanMap>(pScan,
+        kt_double response = m_pMapper->m_pInitialScanMatcher->MatchScan<LocalizedRangeScanMap>(pScan,
                                                                   pSensorManager->GetScans(rCandidateSensorName),
                                                                   bestPose, covariance);
         LinkScans(pSensorManager->GetScan(rCandidateSensorName, 0), pScan, bestPose, covariance);
@@ -2087,6 +2087,7 @@ namespace karto
     m_Initialized(false),
     m_Deserialized(false),
     m_pSequentialScanMatcher(NULL),
+    m_pInitialScanMatcher(NULL),
     m_pMapperSensorManager(NULL),
     m_pGraph(NULL),
     m_pScanOptimizer(NULL)
@@ -2102,6 +2103,7 @@ namespace karto
     m_Initialized(false),
     m_Deserialized(false),
     m_pSequentialScanMatcher(NULL),
+    m_pInitialScanMatcher(NULL),
     m_pMapperSensorManager(NULL),
     m_pGraph(NULL),
     m_pScanOptimizer(NULL)
@@ -2666,6 +2668,17 @@ namespace karto
       rangeThreshold);
     assert(m_pSequentialScanMatcher);
 
+    // Set up scan matcher for first scans
+    if (m_pInitialScanMatcher) {
+      delete m_pInitialScanMatcher;
+    }
+    m_pInitialScanMatcher = ScanMatcher::Create(this,
+      m_pCorrelationSearchSpaceDimension->GetValue(),
+      m_pCorrelationSearchSpaceResolution->GetValue(),
+      m_pCorrelationSearchSpaceSmearDeviation->GetValue(),
+      rangeThreshold);
+    assert(m_pInitialScanMatcher);
+
     if (m_Deserialized) {
       m_pMapperSensorManager->SetRunningScanBufferSize(m_pScanBufferSize->GetValue());
       m_pMapperSensorManager->SetRunningScanBufferMaximumDistance(m_pScanBufferMaximumScanDistance->GetValue());
@@ -2705,6 +2718,11 @@ namespace karto
     {
       delete m_pSequentialScanMatcher;
       m_pSequentialScanMatcher = NULL;
+    }
+    if (m_pInitialScanMatcher)
+    {
+      delete m_pInitialScanMatcher;
+      m_pInitialScanMatcher = NULL;
     }
     if (m_pGraph)
     {

@@ -2143,7 +2143,9 @@ namespace karto
     kt_bool m_Initialized;
     kt_bool m_Deserialized;
 
+    // Sequential and initial scan matchers
     ScanMatcher* m_pSequentialScanMatcher;
+    ScanMatcher* m_pInitialScanMatcher;
 
     MapperSensorManager* m_pMapperSensorManager;
 
