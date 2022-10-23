@@ -2279,21 +2279,27 @@ namespace karto
 
     /**
      * The size of the search grid used by the matcher.
+     * One is for sequential matching, other is for comparing first scans from sensors
      * Default value is 0.3 meters which tells the matcher to use a 30cm x 30cm grid.
      */
     Parameter<kt_double>* m_pCorrelationSearchSpaceDimension;
+    Parameter<kt_double>* m_pInitializationCorrelationSearchSpaceDimension;
 
     /**
      * The resolution (size of a grid cell) of the correlation grid.
+     * One is for sequential matching, other is for comparing first scans from sensors
      * Default value is 0.01 meters.
      */
     Parameter<kt_double>* m_pCorrelationSearchSpaceResolution;
+    Parameter<kt_double>* m_pInitializationCorrelationSearchSpaceResolution;
 
     /**
      * The point readings are smeared by this value in X and Y to create a smoother response.
+     * One is for sequential matching, other is for comparing first scans from sensors
      * Default value is 0.03 meters.
      */
     Parameter<kt_double>* m_pCorrelationSearchSpaceSmearDeviation;
+    Parameter<kt_double>* m_pInitializationCorrelationSearchSpaceSmearDeviation;
 
 
     //////////////////////////////////////////////////////////////////////////////
@@ -2418,6 +2424,9 @@ namespace karto
     double getParamCorrelationSearchSpaceDimension();
     double getParamCorrelationSearchSpaceResolution();
     double getParamCorrelationSearchSpaceSmearDeviation();
+    double getParamInitializationCorrelationSearchSpaceDimension();
+    double getParamInitializationCorrelationSearchSpaceResolution();
+    double getParamInitializationCorrelationSearchSpaceSmearDeviation();
 
     // Correlation Parameters - Loop Closure Parameters
     double getParamLoopSearchSpaceDimension();
@@ -2457,6 +2466,9 @@ namespace karto
     void setParamCorrelationSearchSpaceDimension(double d);
     void setParamCorrelationSearchSpaceResolution(double d);
     void setParamCorrelationSearchSpaceSmearDeviation(double d);
+    void setParamInitializationCorrelationSearchSpaceDimension(double d);
+    void setParamInitializationCorrelationSearchSpaceResolution(double d);
+    void setParamInitializationCorrelationSearchSpaceSmearDeviation(double d);
 
     // Correlation Parameters - Loop Closure Parameters
     void setParamLoopSearchSpaceDimension(double d);

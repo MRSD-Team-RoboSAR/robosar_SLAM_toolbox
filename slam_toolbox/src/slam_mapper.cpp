@@ -207,6 +207,28 @@ void SMapper::configure(const ros::NodeHandle& nh)
       correlation_search_space_smear_deviation);
   }
 
+  double initialization_correlation_search_space_dimension;
+  if(nh.getParam("initialization_correlation_search_space_dimension",
+    initialization_correlation_search_space_dimension))
+  {
+    mapper_->setParamInitializationCorrelationSearchSpaceDimension(initialization_correlation_search_space_dimension);
+  }
+
+  double initialization_correlation_search_space_resolution;
+  if(nh.getParam("initialization_correlation_search_space_resolution",
+    initialization_correlation_search_space_resolution))
+  {
+    mapper_->setParamInitializationCorrelationSearchSpaceResolution(initialization_correlation_search_space_resolution);
+  }
+
+  double initialization_correlation_search_space_smear_deviation;
+  if(nh.getParam("initialization_correlation_search_space_smear_deviation",
+    initialization_correlation_search_space_smear_deviation))
+  {
+    mapper_->setParamInitializationCorrelationSearchSpaceSmearDeviation(
+      initialization_correlation_search_space_smear_deviation);
+  }
+
   // Setting Correlation Parameters, Loop Closure Parameters
   double loop_search_space_dimension;
   if(nh.getParam("loop_search_space_dimension", loop_search_space_dimension))

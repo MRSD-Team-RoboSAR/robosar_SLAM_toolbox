@@ -2259,6 +2259,26 @@ namespace karto
         "The point readings are smeared by this value in X and Y to create a "
         "smoother response.",
         0.03, GetParameterManager());
+    
+    m_pInitializationCorrelationSearchSpaceDimension = new Parameter<kt_double>(
+        "InitializationCorrelationSearchSpaceDimension",
+        "The size of the search grid used by the matcher. Only for comparing "
+        "first scans from each sensor. The search grid will "
+        "have the size CorrelationSearchSpaceDimension * "
+        "CorrelationSearchSpaceDimension",
+        0.3, GetParameterManager());
+
+    m_pInitializationCorrelationSearchSpaceResolution = new Parameter<kt_double>(
+        "InitializationCorrelationSearchSpaceResolution",
+        "The resolution (size of a grid cell) of the correlation grid. Only for "
+        "comparing first scans from each sensor",
+        0.01, GetParameterManager());
+
+    m_pInitializationCorrelationSearchSpaceSmearDeviation = new Parameter<kt_double>(
+        "InitializationCorrelationSearchSpaceSmearDeviation",
+        "The point readings are smeared by this value in X and Y to create a "
+        "smoother response. Only for comparing first scans from each sensor.",
+        0.03, GetParameterManager());
 
 
     //////////////////////////////////////////////////////////////////////////////
@@ -2428,6 +2448,21 @@ namespace karto
     return static_cast<double>(m_pCorrelationSearchSpaceSmearDeviation->GetValue());
   }
 
+  double Mapper::getParamInitializationCorrelationSearchSpaceDimension()
+  {
+    return static_cast<double>(m_pInitializationCorrelationSearchSpaceDimension->GetValue());
+  }
+
+  double Mapper::getParamInitializationCorrelationSearchSpaceResolution()
+  {
+    return static_cast<double>(m_pInitializationCorrelationSearchSpaceResolution->GetValue());
+  }
+
+  double Mapper::getParamInitializationCorrelationSearchSpaceSmearDeviation()
+  {
+    return static_cast<double>(m_pInitializationCorrelationSearchSpaceSmearDeviation->GetValue());
+  }
+
   // Correlation Parameters - Loop Correlation Parameters
 
   double Mapper::getParamLoopSearchSpaceDimension()
@@ -2585,6 +2620,21 @@ namespace karto
     m_pCorrelationSearchSpaceSmearDeviation->SetValue((kt_double)d);
   }
 
+  void Mapper::setParamInitializationCorrelationSearchSpaceDimension(double d)
+  {
+    m_pInitializationCorrelationSearchSpaceDimension->SetValue((kt_double)d);
+  }
+
+  void Mapper::setParamInitializationCorrelationSearchSpaceResolution(double d)
+  {
+    m_pInitializationCorrelationSearchSpaceResolution->SetValue((kt_double)d);
+  }
+
+  void Mapper::setParamInitializationCorrelationSearchSpaceSmearDeviation(double d)
+  {
+    m_pInitializationCorrelationSearchSpaceSmearDeviation->SetValue((kt_double)d);
+  }
+
 
   // Correlation Parameters - Loop Closure Parameters
   void Mapper::setParamLoopSearchSpaceDimension(double d)
@@ -2657,7 +2707,6 @@ namespace karto
       return;
     }
     // create sequential scan and loop matcher, update if deserialized
-
     if (m_pSequentialScanMatcher) {
       delete m_pSequentialScanMatcher;
     }
@@ -2667,15 +2716,14 @@ namespace karto
       m_pCorrelationSearchSpaceSmearDeviation->GetValue(),
       rangeThreshold);
     assert(m_pSequentialScanMatcher);
-
     // Set up scan matcher for first scans
     if (m_pInitialScanMatcher) {
       delete m_pInitialScanMatcher;
     }
     m_pInitialScanMatcher = ScanMatcher::Create(this,
-      m_pCorrelationSearchSpaceDimension->GetValue(),
-      m_pCorrelationSearchSpaceResolution->GetValue(),
-      m_pCorrelationSearchSpaceSmearDeviation->GetValue(),
+      m_pInitializationCorrelationSearchSpaceDimension->GetValue(),
+      m_pInitializationCorrelationSearchSpaceResolution->GetValue(),
+      m_pInitializationCorrelationSearchSpaceSmearDeviation->GetValue(),
       rangeThreshold);
     assert(m_pInitialScanMatcher);
 
