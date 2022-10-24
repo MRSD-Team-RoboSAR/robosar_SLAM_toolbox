@@ -6283,7 +6283,7 @@ namespace karto
 
         // lidar was giving range reading as 0 instead of infinity for points out of range
         // thus condition of end point validity needed to be changed from having only a upper bound to being in a range
-        kt_bool isEndPointValid = math::InRange(rangeReading, pLaserRangeFinder->GetMinimumRange(), rangeThreshold - KT_TOLERANCE)
+        kt_bool isEndPointValid = math::InRange(rangeReading, minRange, rangeThreshold - KT_TOLERANCE);
 
         if (std::isnan(rangeReading))
         {
