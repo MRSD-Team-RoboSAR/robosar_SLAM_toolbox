@@ -5769,9 +5769,9 @@ namespace karto
             kt_double angle = scanPose.GetHeading() + minimumAngle + beamNum * angularResolution;
 
             Vector2<kt_double> point;
-            point.SetX(scanPose.GetX() + (rangeReading * cos(angle)));
-            point.SetY(scanPose.GetY() + (rangeReading * sin(angle)));
 
+            point.SetX(scanPose.GetX() + (rangeThreshold * cos(angle)));
+            point.SetY(scanPose.GetY() + (rangeThreshold * sin(angle)));
             m_UnfilteredPointReadings.push_back(point);
             continue;
           }
@@ -6280,15 +6280,21 @@ namespace karto
       {
         Vector2<kt_double> point = *pointsIter;
         kt_double rangeReading = pScan->GetRangeReadings()[pointIndex];
-        kt_bool isEndPointValid = rangeReading < (rangeThreshold - KT_TOLERANCE);
 
-        if (rangeReading <= minRange || rangeReading >= maxRange || std::isnan(rangeReading))
+        // lidar was giving range reading as 0 instead of infinity for points out of range
+        // thus condition of end point validity needed to be changed from having only a upper bound to being in a range
+        kt_bool isEndPointValid = math::InRange(rangeReading, minRange, rangeThreshold - KT_TOLERANCE);
+
+        if (std::isnan(rangeReading))
         {
+          // only ignore readings which are nan.
+          // For out of range readings, point has been set to rangeThreshold in update function
+          // and endpoint is invalid but we still want to add the line to the grid
           // ignore these readings
           pointIndex++;
           continue;
         }
-        else if (rangeReading >= rangeThreshold)
+        else if (rangeReading >= rangeThreshold && rangeReading < maxRange)
         {
           // trace up to range reading
           kt_double ratio = rangeThreshold / rangeReading;
@@ -6297,7 +6303,6 @@ namespace karto
           point.SetX(scanPosition.GetX() + ratio * dx);
           point.SetY(scanPosition.GetY() + ratio * dy);
         }
-
         kt_bool isInMap = RayTrace(scanPosition, point, isEndPointValid, doUpdate);
         if (!isInMap)
         {

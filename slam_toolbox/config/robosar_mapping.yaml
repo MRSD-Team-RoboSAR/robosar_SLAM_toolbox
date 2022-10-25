@@ -42,8 +42,8 @@ link_scan_maximum_distance: 1.5
 do_loop_closing: true 
 loop_match_minimum_chain_size: 10           
 loop_match_maximum_variance_coarse: 3.0  
-loop_match_minimum_response_coarse: 0.35    
-loop_match_minimum_response_fine: 0.45
+loop_match_minimum_response_coarse: 0.45
+loop_match_minimum_response_fine: 0.55
 
 # Correlation Parameters - Correlation Parameters
 correlation_search_space_dimension: 0.5
@@ -51,11 +51,11 @@ correlation_search_space_resolution: 0.01
 correlation_search_space_smear_deviation: 0.1 
 
 # Correlation Parameters - Loop Closure Parameters
-loop_search_space_dimension: 1.0
+loop_search_space_dimension: 3.0
 loop_search_space_resolution: 0.01
 loop_search_space_smear_deviation: 0.03
 loop_search_maximum_distance: 5.0
-loop_close_across_agents: false
+loop_close_across_agents: true
 
 # Scan Matcher Parameters
 distance_variance_penalty: 1.0
