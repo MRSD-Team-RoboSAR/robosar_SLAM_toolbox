@@ -459,8 +459,6 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTagTransformFromPoses(int tag_id) {
   tf2::Transform map_to_base(q, tf2::Vector3(corrected_pose.GetX(), corrected_pose.GetY(), 0.0));
   tf2::Transform map_to_tag = map_to_base; // Just report agent pose
   tf2::Stamped<tf2::Transform> map_to_tag_msg(map_to_tag, t, map_frame_); // Assumes base frame = laser frame
-  
-  // ROS_INFO("Apriltag %d tf calculated.", tag_id);
 
   // Publish marker
   visualization_msgs::Marker m;
