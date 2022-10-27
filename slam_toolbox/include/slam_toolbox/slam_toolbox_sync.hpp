@@ -40,7 +40,7 @@ protected:
     slam_toolbox_msgs::DeserializePoseGraph::Response& resp) override final;
 
   std::queue<PosedScan> q_;
-  std::map<std::string, std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr> > apriltags_q_;
+  std::map<std::string, std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr> > agent_apriltags_q_m_;
   ros::ServiceServer ssClear_;
   boost::mutex apriltag_q_mutex_;
 };

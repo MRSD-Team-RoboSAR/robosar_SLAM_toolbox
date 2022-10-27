@@ -232,7 +232,7 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
     {
       std::map<int, std::pair<geometry_msgs::PoseWithCovarianceStamped, karto::LocalizedRangeScan*>>::iterator iter;
       for (iter = m_apriltag_to_scan_.begin(); iter != m_apriltag_to_scan_.end(); iter++) {
-        setTagTransformFromPoses(iter->first);
+        publishTagTransform(iter->first);
       }
     }
 
@@ -446,7 +446,7 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
 
 
 /*****************************************************************************/
-tf2::Stamped<tf2::Transform> SlamToolbox::setTagTransformFromPoses(int tag_id) {
+tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id) {
 /*****************************************************************************/
   boost::mutex::scoped_lock lock(map_to_tags_mutex_);
   geometry_msgs::PoseWithCovarianceStamped scan_to_tag = m_apriltag_to_scan_[tag_id].first;
@@ -655,7 +655,7 @@ void SlamToolbox::addTag(apriltag_ros::AprilTagDetectionArray::ConstPtr& aprilta
     // assume not group of tags
     if (m_apriltag_to_scan_.find(tag.id[0]) == m_apriltag_to_scan_.end())
       m_apriltag_to_scan_[tag.id[0]] = std::make_pair(tag.pose, scan);
-    setTagTransformFromPoses(tag.id[0]);
+    publishTagTransform(tag.id[0]);
   }
 }
  

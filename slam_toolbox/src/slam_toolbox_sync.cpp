@@ -66,7 +66,7 @@ void SynchronousSlamToolbox::run()
         std::getline(ss, frame_id, '/');
         boost::mutex::scoped_lock lock(apriltag_q_mutex_);
         // Get this agent's queue
-        std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>& cur_queue = apriltags_q_[frame_id];
+        std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>& cur_queue = agent_apriltags_q_m_[frame_id];
         // Go through entire queue
         while(!cur_queue.empty()){
           addTag(cur_queue.front(), karto_scan);
@@ -124,12 +124,12 @@ void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetect
   std::getline(ss, frame_id, '/');
   // Put non-empty apriltag array into map
   if (apriltags->detections.size() > 0 && apriltags->detections[0].id.size() > 0) {
-    if (apriltags_q_.find(frame_id) == apriltags_q_.end())
-      apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
+    if (agent_apriltags_q_m_.find(frame_id) == agent_apriltags_q_m_.end())
+      agent_apriltags_q_m_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
     // Push to queue if size permits
     // Queue reflects apriltags detected by this agent over time
-    if(apriltags_q_[frame_id].size() < 10)
-      apriltags_q_[frame_id].push(apriltags);
+    if(agent_apriltags_q_m_[frame_id].size() < 10)
+      agent_apriltags_q_m_[frame_id].push(apriltags);
   }
 }
 
