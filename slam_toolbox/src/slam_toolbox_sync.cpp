@@ -103,11 +103,9 @@ void SynchronousSlamToolbox::laserCallback(
   {
     // find if apriltag was detected for agent, assumes laser_frame = apriltag_frame
     if (apriltags_q_.find(frame_id) != apriltags_q_.end() && !apriltags_q_[frame_id].empty()) {
-      ROS_INFO("frame: %s", frame_id.c_str());
       q_.push(PosedScan(scan, pose, apriltags_q_[frame_id].front()));
       apriltags_q_[frame_id].pop();
     } else {
-      ROS_INFO("scan processed");
       q_.push(PosedScan(scan, pose));
     }
   }
@@ -126,7 +124,6 @@ void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetect
     if (apriltags_q_.find(frame_id) == apriltags_q_.end())
       apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
     apriltags_q_[frame_id].push(apriltags);
-    ROS_INFO("Apriltag %d received in frame %s", apriltags->detections[0].id[0], frame_id.c_str());
     should_process_[frame_id] = false;
   }
 }
