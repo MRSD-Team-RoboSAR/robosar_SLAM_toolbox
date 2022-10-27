@@ -41,17 +41,11 @@ namespace toolbox_types
 struct PosedScan
 {
   PosedScan(sensor_msgs::LaserScan::ConstPtr scan_in, karto::Pose2 pose_in) :
-             scan(scan_in), pose(pose_in)
-  {
-    apriltags = nullptr;
-  }
-  PosedScan(sensor_msgs::LaserScan::ConstPtr scan_in, karto::Pose2 pose_in, apriltag_ros::AprilTagDetectionArray::ConstPtr apriltags_in) :
-             scan(scan_in), pose(pose_in), apriltags(apriltags_in)
+             scan(scan_in), pose(pose_in) 
   {
   }
   sensor_msgs::LaserScan::ConstPtr scan;
   karto::Pose2 pose;
-  apriltag_ros::AprilTagDetectionArray::ConstPtr apriltags;
 };
 
 // object containing a vertex pointer and an updated score

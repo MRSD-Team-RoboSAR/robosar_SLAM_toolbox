@@ -651,6 +651,7 @@ void SlamToolbox::addTag(apriltag_ros::AprilTagDetectionArray::ConstPtr& aprilta
   boost::mutex::scoped_lock lock_s(smapper_mutex_);
   if (scan == nullptr) ROS_ERROR("\r\n\r\n\r\n\r\n\r\n**** SCAN POINTER IS NULL ****\r\n\r\n\r\n\r\n\r\n");
   for (apriltag_ros::AprilTagDetection tag : apriltag->detections) {
+    // Only consider apriltag ids you have not seen before
     // assume not group of tags
     if (m_apriltag_to_scan_.find(tag.id[0]) == m_apriltag_to_scan_.end())
       m_apriltag_to_scan_[tag.id[0]] = std::make_pair(tag.pose, scan);
