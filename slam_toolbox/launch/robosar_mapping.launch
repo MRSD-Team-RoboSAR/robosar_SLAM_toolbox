@@ -8,12 +8,10 @@
     <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
         <rosparam command="load" file="$(find slam_toolbox)/config/robosar_mapping.yaml" />
     </node>
-    <!-- Set maximum laser range -->
-    <param name="/slam_toolbox/max_laser_range" type="double" value="4.0" />
     <!-- Launch RVIZ with provided configurations -->
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find robosar_gazebo_sim)/config/run_slam_sim.rviz" />
     <!-- Teleoperation -->
     <node name="teleop_twist_keyboard_$(arg agentN)" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
         <remap from="cmd_vel" to="/robosar_agent_bringup_node/$(arg agentN)/cmd_vel"/>
-  </node>
+    </node>
 </launch>
