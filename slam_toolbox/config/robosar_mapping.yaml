@@ -48,7 +48,11 @@ loop_match_minimum_response_fine: 0.55
 # Correlation Parameters - Correlation Parameters
 correlation_search_space_dimension: 0.5
 correlation_search_space_resolution: 0.01
-correlation_search_space_smear_deviation: 0.1 
+correlation_search_space_smear_deviation: 0.1
+# Initialization Correlation Parameters - Correlation Parameters for first scan from each sensor
+initialization_correlation_search_space_dimension: 2.0
+initialization_correlation_search_space_resolution: 0.01
+initialization_correlation_search_space_smear_deviation: 0.1
 
 # Correlation Parameters - Loop Closure Parameters
 loop_search_space_dimension: 3.0
