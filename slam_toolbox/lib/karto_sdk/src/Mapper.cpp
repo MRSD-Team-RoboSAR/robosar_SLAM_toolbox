@@ -1510,7 +1510,7 @@ namespace karto
 
         Pose2 bestPose;
         Matrix3 covariance;
-        kt_double response = m_pMapper->m_pSequentialScanMatcher->MatchScan<LocalizedRangeScanMap>(pScan,
+        kt_double response = m_pMapper->m_pInitialScanMatcher->MatchScan<LocalizedRangeScanMap>(pScan,
                                                                   pSensorManager->GetScans(rCandidateSensorName),
                                                                   bestPose, covariance);
         LinkScans(pSensorManager->GetScan(rCandidateSensorName, 0), pScan, bestPose, covariance);
@@ -2087,6 +2087,7 @@ namespace karto
     m_Initialized(false),
     m_Deserialized(false),
     m_pSequentialScanMatcher(NULL),
+    m_pInitialScanMatcher(NULL),
     m_pMapperSensorManager(NULL),
     m_pGraph(NULL),
     m_pScanOptimizer(NULL)
@@ -2102,6 +2103,7 @@ namespace karto
     m_Initialized(false),
     m_Deserialized(false),
     m_pSequentialScanMatcher(NULL),
+    m_pInitialScanMatcher(NULL),
     m_pMapperSensorManager(NULL),
     m_pGraph(NULL),
     m_pScanOptimizer(NULL)
@@ -2257,6 +2259,26 @@ namespace karto
         "The point readings are smeared by this value in X and Y to create a "
         "smoother response.",
         0.03, GetParameterManager());
+    
+    m_pInitializationCorrelationSearchSpaceDimension = new Parameter<kt_double>(
+        "InitializationCorrelationSearchSpaceDimension",
+        "The size of the search grid used by the matcher. Only for comparing "
+        "first scans from each sensor. The search grid will "
+        "have the size CorrelationSearchSpaceDimension * "
+        "CorrelationSearchSpaceDimension",
+        0.3, GetParameterManager());
+
+    m_pInitializationCorrelationSearchSpaceResolution = new Parameter<kt_double>(
+        "InitializationCorrelationSearchSpaceResolution",
+        "The resolution (size of a grid cell) of the correlation grid. Only for "
+        "comparing first scans from each sensor",
+        0.01, GetParameterManager());
+
+    m_pInitializationCorrelationSearchSpaceSmearDeviation = new Parameter<kt_double>(
+        "InitializationCorrelationSearchSpaceSmearDeviation",
+        "The point readings are smeared by this value in X and Y to create a "
+        "smoother response. Only for comparing first scans from each sensor.",
+        0.03, GetParameterManager());
 
 
     //////////////////////////////////////////////////////////////////////////////
@@ -2278,6 +2300,10 @@ namespace karto
         "smoother response.",
         0.03, GetParameterManager());
 
+    m_pLoopCloseAcrossAgents = new Parameter<kt_bool>(
+        "LoopCloseAcrossAgents",
+        "Whether to perform loop closure across multiple agents",
+        true, GetParameterManager());
     //////////////////////////////////////////////////////////////////////////////
     // ScanMatcherParameters;
 
@@ -2422,6 +2448,21 @@ namespace karto
     return static_cast<double>(m_pCorrelationSearchSpaceSmearDeviation->GetValue());
   }
 
+  double Mapper::getParamInitializationCorrelationSearchSpaceDimension()
+  {
+    return static_cast<double>(m_pInitializationCorrelationSearchSpaceDimension->GetValue());
+  }
+
+  double Mapper::getParamInitializationCorrelationSearchSpaceResolution()
+  {
+    return static_cast<double>(m_pInitializationCorrelationSearchSpaceResolution->GetValue());
+  }
+
+  double Mapper::getParamInitializationCorrelationSearchSpaceSmearDeviation()
+  {
+    return static_cast<double>(m_pInitializationCorrelationSearchSpaceSmearDeviation->GetValue());
+  }
+
   // Correlation Parameters - Loop Correlation Parameters
 
   double Mapper::getParamLoopSearchSpaceDimension()
@@ -2437,6 +2478,11 @@ namespace karto
   double Mapper::getParamLoopSearchSpaceSmearDeviation()
   {
     return static_cast<double>(m_pLoopSearchSpaceSmearDeviation->GetValue());
+  }
+
+  bool Mapper::getParamLoopCloseAcrossAgents()
+  {
+    return static_cast<bool>(m_pLoopCloseAcrossAgents->GetValue());
   }
 
   // ScanMatcher Parameters
@@ -2574,6 +2620,21 @@ namespace karto
     m_pCorrelationSearchSpaceSmearDeviation->SetValue((kt_double)d);
   }
 
+  void Mapper::setParamInitializationCorrelationSearchSpaceDimension(double d)
+  {
+    m_pInitializationCorrelationSearchSpaceDimension->SetValue((kt_double)d);
+  }
+
+  void Mapper::setParamInitializationCorrelationSearchSpaceResolution(double d)
+  {
+    m_pInitializationCorrelationSearchSpaceResolution->SetValue((kt_double)d);
+  }
+
+  void Mapper::setParamInitializationCorrelationSearchSpaceSmearDeviation(double d)
+  {
+    m_pInitializationCorrelationSearchSpaceSmearDeviation->SetValue((kt_double)d);
+  }
+
 
   // Correlation Parameters - Loop Closure Parameters
   void Mapper::setParamLoopSearchSpaceDimension(double d)
@@ -2591,6 +2652,10 @@ namespace karto
     m_pLoopSearchSpaceSmearDeviation->SetValue((kt_double)d);
   }
 
+  void Mapper::setParamLoopCloseAcrossAgents(bool b)
+  {
+    m_pLoopCloseAcrossAgents->SetValue((kt_bool)b);
+  }
 
   // Scan Matcher Parameters
   void Mapper::setParamDistanceVariancePenalty(double d)
@@ -2642,7 +2707,6 @@ namespace karto
       return;
     }
     // create sequential scan and loop matcher, update if deserialized
-
     if (m_pSequentialScanMatcher) {
       delete m_pSequentialScanMatcher;
     }
@@ -2652,6 +2716,16 @@ namespace karto
       m_pCorrelationSearchSpaceSmearDeviation->GetValue(),
       rangeThreshold);
     assert(m_pSequentialScanMatcher);
+    // Set up scan matcher for first scans
+    if (m_pInitialScanMatcher) {
+      delete m_pInitialScanMatcher;
+    }
+    m_pInitialScanMatcher = ScanMatcher::Create(this,
+      m_pInitializationCorrelationSearchSpaceDimension->GetValue(),
+      m_pInitializationCorrelationSearchSpaceResolution->GetValue(),
+      m_pInitializationCorrelationSearchSpaceSmearDeviation->GetValue(),
+      rangeThreshold);
+    assert(m_pInitialScanMatcher);
 
     if (m_Deserialized) {
       m_pMapperSensorManager->SetRunningScanBufferSize(m_pScanBufferSize->GetValue());
@@ -2692,6 +2766,11 @@ namespace karto
     {
       delete m_pSequentialScanMatcher;
       m_pSequentialScanMatcher = NULL;
+    }
+    if (m_pInitialScanMatcher)
+    {
+      delete m_pInitialScanMatcher;
+      m_pInitialScanMatcher = NULL;
     }
     if (m_pGraph)
     {
@@ -2777,7 +2856,15 @@ namespace karto
 
 			  if (m_pDoLoopClosing->GetValue())
 			  {
-				  std::vector<Name> deviceNames = m_pMapperSensorManager->GetSensorNames();
+			    std::vector<Name> deviceNames;
+			    if(m_pLoopCloseAcrossAgents->GetValue()){
+			      deviceNames = m_pMapperSensorManager->GetSensorNames();
+			    }
+			    else{
+			      karto::Name current_sensor_name = pScan->GetSensorName();
+			      deviceNames.push_back(current_sensor_name);
+			    }
+
 				  const_forEach(std::vector<Name>, &deviceNames)
 				  {
 					  m_pGraph->TryCloseLoop(pScan, *iter);
@@ -2855,8 +2942,14 @@ namespace karto
 
         if (m_pDoLoopClosing->GetValue())
         {
-          std::vector<Name> deviceNames =
-            m_pMapperSensorManager->GetSensorNames();
+          std::vector<Name> deviceNames;
+          if(m_pLoopCloseAcrossAgents->GetValue()){
+            deviceNames = m_pMapperSensorManager->GetSensorNames();
+          }
+          else{
+            karto::Name current_sensor_name = pScan->GetSensorName();
+            deviceNames.push_back(current_sensor_name);
+          }
           const_forEach(std::vector<Name>, &deviceNames)
           {
             m_pGraph->TryCloseLoop(pScan, *iter);
@@ -2947,7 +3040,14 @@ namespace karto
       
       if (m_pDoLoopClosing->GetValue())
       {
-        std::vector<Name> deviceNames = m_pMapperSensorManager->GetSensorNames();
+        std::vector<Name> deviceNames;
+        if(m_pLoopCloseAcrossAgents->GetValue()){
+            deviceNames = m_pMapperSensorManager->GetSensorNames();
+        }
+        else{
+            karto::Name current_sensor_name = pScan->GetSensorName();
+            deviceNames.push_back(current_sensor_name);
+        }
         const_forEach(std::vector<Name>, &deviceNames)
         {
           m_pGraph->TryCloseLoop(pScan, *iter);
@@ -3141,8 +3241,14 @@ namespace karto
 
         if (m_pDoLoopClosing->GetValue())
         {
-          std::vector<Name> deviceNames =
-          m_pMapperSensorManager->GetSensorNames();
+          std::vector<Name> deviceNames;
+          if(m_pLoopCloseAcrossAgents->GetValue()){
+              deviceNames = m_pMapperSensorManager->GetSensorNames();
+          }
+          else{
+              karto::Name current_sensor_name = pScan->GetSensorName();
+              deviceNames.push_back(current_sensor_name);
+          }
           const_forEach(std::vector<Name>, &deviceNames)
           {
             m_pGraph->TryCloseLoop(pScan, *iter);
