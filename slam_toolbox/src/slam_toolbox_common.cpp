@@ -164,7 +164,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
       apriltag_topics_.push_back("/robosar_agent_bringup_node/" + agent + "/feedback/apriltag");
     }
   }
-  
+
   private_nh.param("throttle_scans", throttle_scans_, 1);
   private_nh.param("enable_interactive_mode", enable_interactive_mode_, false);
 
