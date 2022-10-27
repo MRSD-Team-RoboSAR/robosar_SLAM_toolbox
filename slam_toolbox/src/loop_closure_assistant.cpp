@@ -162,9 +162,13 @@ void LoopClosureAssistant::publishGraph()
     // Assign color
     m.color = SensorColorMap[sensor_name];
     // Assign ID and position
-    m.id = it->first + 1;
+    m.id = it->first;
     m.pose.position.x = it->second(0);
     m.pose.position.y = it->second(1);
+    // Assign yaw
+    tf2::Quaternion quat(0.,0.,0.,1.0);
+    quat.setRPY(0., 0., it->second(2));
+    m.pose.orientation = tf2::toMsg(quat);
 
     if (interactive_mode && enable_interactive_mode_)
     {
