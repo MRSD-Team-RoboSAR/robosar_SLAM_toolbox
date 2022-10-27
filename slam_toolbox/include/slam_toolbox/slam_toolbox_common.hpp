@@ -91,7 +91,7 @@ protected:
   bool updateMap();
   tf2::Stamped<tf2::Transform> setTransformFromPoses(const karto::Pose2& pose,
     const karto::Pose2& karto_pose, const std_msgs::Header& header, const bool& update_reprocessing_transform);
-  tf2::Stamped<tf2::Transform> setTagTransformFromPoses(int tag_id);
+  tf2::Stamped<tf2::Transform> publishTagTransform(int tag_id);
   karto::LocalizedRangeScan* getLocalizedRangeScan(karto::LaserRangeFinder* laser,
     const sensor_msgs::LaserScan::ConstPtr& scan,
     karto::Pose2& karto_pose);

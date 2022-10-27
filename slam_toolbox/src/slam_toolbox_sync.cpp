@@ -55,10 +55,24 @@ void SynchronousSlamToolbox::run()
           (int)q_.size());
       }
 
+      // Process scan with pose
       karto::LocalizedRangeScan* karto_scan = addScan(getLaser(scan_w_pose.scan), scan_w_pose);
-      if (karto_scan) 
-        addTag(scan_w_pose.apriltags, karto_scan);
-      continue;
+      // Tie this agent's pose with this agent's apriltag array detections
+      if (karto_scan)
+      {
+        // Get this agent's name
+        std::stringstream ss(scan_w_pose.scan->header.frame_id);
+        std::string frame_id;
+        std::getline(ss, frame_id, '/');
+        boost::mutex::scoped_lock lock(apriltag_q_mutex_);
+        // Get this agent's queue
+        std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>& cur_queue = agent_apriltags_q_m_[frame_id];
+        // Go through entire queue
+        while(!cur_queue.empty()){
+          addTag(cur_queue.front(), karto_scan);
+          cur_queue.pop();
+        }
+      }
     }
 
     r.sleep();
@@ -92,22 +106,10 @@ void SynchronousSlamToolbox::laserCallback(
     return;
   }
 
-  std::stringstream ss(scan->header.frame_id);
-  std::string frame_id;
-  std::getline(ss, frame_id, '/');
-  boost::mutex::scoped_lock lock(apriltag_q_mutex_);
-  should_process_[frame_id] = shouldProcessScan(scan, pose);
-
   // if sync and valid, add to queue
-  if (should_process_[frame_id])
+  if (shouldProcessScan(scan, pose))
   {
-    // find if apriltag was detected for agent, assumes laser_frame = apriltag_frame
-    if (apriltags_q_.find(frame_id) != apriltags_q_.end() && !apriltags_q_[frame_id].empty()) {
-      q_.push(PosedScan(scan, pose, apriltags_q_[frame_id].front()));
-      apriltags_q_[frame_id].pop();
-    } else {
-      q_.push(PosedScan(scan, pose));
-    }
+    q_.push(PosedScan(scan, pose));
   }
 
   return;
@@ -120,19 +122,15 @@ void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetect
   std::stringstream ss(apriltags->header.frame_id);
   std::string frame_id;
   std::getline(ss, frame_id, '/');
-  if (shouldProcessTag(frame_id) && apriltags->detections.size() > 0 && apriltags->detections[0].id.size() > 0) {
-    if (apriltags_q_.find(frame_id) == apriltags_q_.end())
-      apriltags_q_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
-    apriltags_q_[frame_id].push(apriltags);
-    should_process_[frame_id] = false;
+  // Put non-empty apriltag array into map
+  if (apriltags->detections.size() > 0 && apriltags->detections[0].id.size() > 0) {
+    if (agent_apriltags_q_m_.find(frame_id) == agent_apriltags_q_m_.end())
+      agent_apriltags_q_m_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
+    // Push to queue if size permits
+    // Queue reflects apriltags detected by this agent over time
+    if(agent_apriltags_q_m_[frame_id].size() < 10)
+      agent_apriltags_q_m_[frame_id].push(apriltags);
   }
-}
-
-/*****************************************************************************/
-bool SynchronousSlamToolbox::shouldProcessTag(std:: string frame_id) {
-/*****************************************************************************/
-  if (should_process_.find(frame_id) == should_process_.end()) return false;
-  return should_process_[frame_id];
 }
 
 /*****************************************************************************/
