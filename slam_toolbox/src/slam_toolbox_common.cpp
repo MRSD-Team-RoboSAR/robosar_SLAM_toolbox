@@ -151,7 +151,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
   }
   else
   {
-    for (auto agent : fleet_info_)
+    for (const auto& agent : fleet_info_)
     {
       laser_topics_.push_back("/robosar_agent_bringup_node/" + agent + "/feedback/scan");
       base_frames_.push_back(agent + "/base_link");
@@ -530,21 +530,28 @@ bool SlamToolbox::shouldProcessScan(
 
 std::set<std::string> SlamToolbox::getFleetStatusInfo()
 {
-
   robosar_messages::agent_status srv;
-  if (status_client_.call(srv))
+  if (status_client_.waitForExistence(ros::Duration(10)))
   {
-    std::vector<std::string> agentsVec = srv.response.agents_active;
-    std::set<std::string> agentsSet;
+    if (status_client_.call(srv))
+    {
+      std::vector<std::string> agentsVec = srv.response.agents_active;
+      std::set<std::string> agentsSet;
 
-    for (auto agent : agentsVec)
-      agentsSet.insert(agent);
+      for (const auto &agent : agentsVec)
+        agentsSet.insert(agent);
 
-    return agentsSet;
+      return agentsSet;
+    }
+    else
+    {
+      ROS_ERROR("[MISSION_EXEC] Failed to call fleet info service");
+      return fleet_info_;
+    }
   }
   else
   {
-    ROS_ERROR("[MISSION_EXEC] Failed to call fleet info service");
+    ROS_ERROR("[MISSION_EXEC] Status service timeout");
     return fleet_info_;
   }
 }

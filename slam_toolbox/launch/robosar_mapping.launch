@@ -3,8 +3,7 @@
 <launch>
     <arg name="agentN" value="agent1" />
     <!-- Agent bringup -->
-    <!-- Slam toolbox subscribes to laser scans for agents that are active. Need agent bringup to be up and running before launching slam-->
-    <!-- <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node.launch"/> -->
+    <include file="$(find robosar_agent_bringup)/launch/robosar_agent_bringup_node.launch"/>
     <!-- Run SLAM Toolbox for mapping -->
     <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
         <rosparam command="load" file="$(find slam_toolbox)/config/robosar_mapping.yaml" />
