@@ -36,6 +36,8 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
   smapper_ = std::make_unique<mapper_utils::SMapper>();
   dataset_ = std::make_unique<karto::Dataset>();
 
+  status_client_ = nh_.serviceClient<robosar_messages::agent_status>("/robosar_agent_bringup_node/agent_status");
+  fleet_info_ = getFleetStatusInfo();
   setParams(nh_);
   setROSInterfaces(nh_);
   setSolver(nh_);
@@ -127,21 +129,36 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
   private_nh.param("map_frame", map_frame_, std::string("map"));
   private_nh.param("resolution", resolution_, 0.05);
   private_nh.param("map_name", map_name_, std::string("/map"));
-  std::vector<std::string> default_laser = {"/scan"};
-  if (!private_nh.getParam("laser_topics", laser_topics_))
+
+  if (fleet_info_.empty())
   {
-    laser_topics_ = default_laser;
+    //If fleet info is empty, it will use params defined in yaml file
+    std::vector<std::string> default_laser = {"/scan"};
+    if (!private_nh.getParam("laser_topics", laser_topics_))
+    {
+      laser_topics_ = default_laser;
+    }
+    std::vector<std::string> default_base_frame = {"base_footprint"};
+    if (!private_nh.getParam("base_frames", base_frames_))
+    {
+      base_frames_ = default_base_frame;
+    }
+    std::vector<std::string> default_odom_frame = {"odom"};
+    if (!private_nh.getParam("odom_frames", odom_frames_))
+    {
+      odom_frames_ = default_odom_frame;
+    }
   }
-  std::vector<std::string> default_base_frame = {"base_footprint"};
-  if (!private_nh.getParam("base_frames", base_frames_))
+  else
   {
-    base_frames_ = default_base_frame;
+    for (const auto& agent : fleet_info_)
+    {
+      laser_topics_.push_back("/robosar_agent_bringup_node/" + agent + "/feedback/scan");
+      base_frames_.push_back(agent + "/base_link");
+      odom_frames_.push_back(agent + "/odom");
+    }
   }
-  std::vector<std::string> default_odom_frame = {"odom"};
-  if (!private_nh.getParam("odom_frames", odom_frames_))
-  {
-    odom_frames_ = default_odom_frame;
-  }
+
   private_nh.param("throttle_scans", throttle_scans_, 1);
   private_nh.param("enable_interactive_mode", enable_interactive_mode_, false);
 
@@ -509,6 +526,34 @@ bool SlamToolbox::shouldProcessScan(
   last_scan_times[cur_frame_id] = scan->header.stamp; 
 
   return true;
+}
+
+std::set<std::string> SlamToolbox::getFleetStatusInfo()
+{
+  robosar_messages::agent_status srv;
+  if (status_client_.waitForExistence(ros::Duration(10)))
+  {
+    if (status_client_.call(srv))
+    {
+      std::vector<std::string> agentsVec = srv.response.agents_active;
+      std::set<std::string> agentsSet;
+
+      for (const auto &agent : agentsVec)
+        agentsSet.insert(agent);
+
+      return agentsSet;
+    }
+    else
+    {
+      ROS_ERROR("[MISSION_EXEC] Failed to call fleet info service");
+      return fleet_info_;
+    }
+  }
+  else
+  {
+    ROS_ERROR("[MISSION_EXEC] Status service timeout");
+    return fleet_info_;
+  }
 }
 
 /*****************************************************************************/

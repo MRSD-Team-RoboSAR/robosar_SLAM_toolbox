@@ -36,6 +36,7 @@
 #include "slam_toolbox/get_pose_helper.hpp"
 #include "slam_toolbox/map_saver.hpp"
 #include "slam_toolbox/loop_closure_assistant.hpp"
+#include "robosar_messages/agent_status.h"
 
 #include <string>
 #include <map>
@@ -93,6 +94,7 @@ protected:
     karto::Pose2& karto_pose);
   bool shouldStartWithPoseGraph(std::string& filename, geometry_msgs::Pose2D& pose, bool& start_at_dock);
   bool shouldProcessScan(const sensor_msgs::LaserScan::ConstPtr& scan, const karto::Pose2& pose);
+  std::set<std::string> getFleetStatusInfo();
 
   // pausing bits
   bool isPaused(const PausedApplication& app);
@@ -108,6 +110,7 @@ protected:
   std::vector<std::unique_ptr<tf2_ros::MessageFilter<sensor_msgs::LaserScan> > > scan_filters_;
   ros::Publisher sst_, sstm_;
   ros::ServiceServer ssMap_, ssPauseMeasurements_, ssSerialize_, ssDesserialize_;
+  ros::ServiceClient status_client_;
 
   // Storage for ROS parameters
   std::string map_frame_, map_name_;
@@ -141,6 +144,7 @@ protected:
   ProcessType processor_type_;
   std::unique_ptr<karto::Pose2> process_near_pose_;
   tf2::Transform reprocessing_transform_;
+  std::set<std::string> fleet_info_;
 
   // pluginlib
   pluginlib::ClassLoader<karto::ScanSolver> solver_loader_;
