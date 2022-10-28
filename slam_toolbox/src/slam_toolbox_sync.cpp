@@ -55,8 +55,24 @@ void SynchronousSlamToolbox::run()
           (int)q_.size());
       }
 
-      addScan(getLaser(scan_w_pose.scan), scan_w_pose);
-      continue;
+      // Process scan with pose
+      karto::LocalizedRangeScan* karto_scan = addScan(getLaser(scan_w_pose.scan), scan_w_pose);
+      // Tie this agent's pose with this agent's apriltag array detections
+      if (karto_scan)
+      {
+        // Get this agent's name
+        std::stringstream ss(scan_w_pose.scan->header.frame_id);
+        std::string frame_id;
+        std::getline(ss, frame_id, '/');
+        boost::mutex::scoped_lock lock(apriltag_q_mutex_);
+        // Get this agent's queue
+        std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>& cur_queue = agent_apriltags_q_m_[frame_id];
+        // Go through entire queue
+        while(!cur_queue.empty()){
+          addTag(cur_queue.front(), karto_scan);
+          cur_queue.pop();
+        }
+      }
     }
 
     r.sleep();
@@ -97,6 +113,24 @@ void SynchronousSlamToolbox::laserCallback(
   }
 
   return;
+}
+
+/*****************************************************************************/
+void SynchronousSlamToolbox::apriltagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltags) {
+/*****************************************************************************/
+  boost::mutex::scoped_lock lock(apriltag_q_mutex_);
+  std::stringstream ss(apriltags->header.frame_id);
+  std::string frame_id;
+  std::getline(ss, frame_id, '/');
+  // Put non-empty apriltag array into map
+  if (apriltags->detections.size() > 0 && apriltags->detections[0].id.size() > 0) {
+    if (agent_apriltags_q_m_.find(frame_id) == agent_apriltags_q_m_.end())
+      agent_apriltags_q_m_[frame_id] = std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>();
+    // Push to queue if size permits
+    // Queue reflects apriltags detected by this agent over time
+    if(agent_apriltags_q_m_[frame_id].size() < 10)
+      agent_apriltags_q_m_[frame_id].push(apriltags);
+  }
 }
 
 /*****************************************************************************/

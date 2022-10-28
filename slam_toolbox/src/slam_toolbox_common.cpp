@@ -148,6 +148,11 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
     {
       odom_frames_ = default_odom_frame;
     }
+    std::vector<std::string> default_apriltag = {"/detections"};
+    if (!private_nh.getParam("apriltag_topics", apriltag_topics_))
+    {
+      apriltag_topics_ = default_apriltag;
+    }
   }
   else
   {
@@ -156,6 +161,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
       laser_topics_.push_back("/robosar_agent_bringup_node/" + agent + "/feedback/scan");
       base_frames_.push_back(agent + "/base_link");
       odom_frames_.push_back(agent + "/odom");
+      apriltag_topics_.push_back("/robosar_agent_bringup_node/" + agent + "/feedback/apriltag");
     }
   }
 
@@ -193,6 +199,7 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
   tfB_ = std::make_unique<tf2_ros::TransformBroadcaster>();
   sst_ = node.advertise<nav_msgs::OccupancyGrid>(map_name_, 1, true);
   sstm_ = node.advertise<nav_msgs::MapMetaData>(map_name_ + "_metadata", 1, true);
+  tag_pub_ = node.advertise<visualization_msgs::Marker>("victim_markers", 100, true);
   ssMap_ = node.advertiseService("dynamic_map", &SlamToolbox::mapCallback, this);
   ssPauseMeasurements_ = node.advertiseService("pause_new_measurements", &SlamToolbox::pauseNewMeasurementsCallback, this);
   ssSerialize_ = node.advertiseService("serialize_map", &SlamToolbox::serializePoseGraphCallback, this);
@@ -203,6 +210,10 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
     scan_filter_subs_.push_back(std::make_unique<message_filters::Subscriber<sensor_msgs::LaserScan> >(node, laser_topics_[idx], 5));
     scan_filters_.push_back(std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_subs_.back(), *tf_, odom_frames_[idx], 5, node));
     scan_filters_.back()->registerCallback(boost::bind(&SlamToolbox::laserCallback, this, _1));
+
+    ROS_INFO("Subscribing to apriltag detectors: %s", apriltag_topics_[idx].c_str());
+    apriltag_subs_.push_back(std::make_unique<message_filters::Subscriber<apriltag_ros::AprilTagDetectionArray> >(node, apriltag_topics_[idx], 5));
+    apriltag_subs_.back()->registerCallback(boost::bind(&SlamToolbox::apriltagCallback, this, _1));
   }
 }
 
@@ -235,6 +246,14 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
         tfB_->sendTransform(msg);
       }
     }
+
+    {
+      std::map<int, std::pair<geometry_msgs::PoseWithCovarianceStamped, karto::LocalizedRangeScan*>>::iterator iter;
+      for (iter = m_apriltag_to_scan_.begin(); iter != m_apriltag_to_scan_.end(); iter++) {
+        publishTagTransform(iter->first);
+      }
+    }
+
     r.sleep();
   }
 }
@@ -443,6 +462,51 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   return odom_to_map;
 }
 
+
+/*****************************************************************************/
+tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id) {
+/*****************************************************************************/
+  boost::mutex::scoped_lock lock(map_to_tags_mutex_);
+  geometry_msgs::PoseWithCovarianceStamped scan_to_tag = m_apriltag_to_scan_[tag_id].first;
+  karto::Pose2 corrected_pose = m_apriltag_to_scan_[tag_id].second->GetCorrectedPose();
+  
+  // Compute the map->base transform
+  const ros::Time& t = scan_to_tag.header.stamp;
+  tf2::Quaternion q(0.,0.,0.,1.0);
+  q.setRPY(0., 0., corrected_pose.GetHeading());
+  tf2::Transform map_to_base(q, tf2::Vector3(corrected_pose.GetX(), corrected_pose.GetY(), 0.0));
+  tf2::Transform map_to_tag = map_to_base; // Just report agent pose
+  tf2::Stamped<tf2::Transform> map_to_tag_msg(map_to_tag, t, map_frame_); // Assumes base frame = laser frame
+
+  // Publish marker
+  visualization_msgs::Marker m;
+  tf2::Vector3 pos = map_to_tag.getOrigin();
+  m.pose.position.x = pos[0];
+  m.pose.position.y = pos[1];
+  m.pose.position.z = pos[2];
+  tf2::Quaternion quat = map_to_tag.getRotation();
+  m.pose.orientation.x = 0;
+  m.pose.orientation.y = 0;
+  m.pose.orientation.z = 0;
+  m.pose.orientation.w = 1;
+  m.header.frame_id = map_to_tag_msg.frame_id_;
+  m.ns = map_to_tag_msg.frame_id_;
+  m.id = tag_id;
+  m.type = 2;
+  m.action = 0;
+  m.scale.x = 0.3;
+  m.scale.y = 0.3;
+  m.scale.z = 0.3;
+  m.color.r = 1;
+  m.color.g = 0;
+  m.color.b = 1;
+  m.color.a = 1;
+  m.lifetime = ros::Duration(0); // forever
+  tag_pub_.publish(m);
+  
+  return map_to_tag_msg;
+}
+
 /*****************************************************************************/
 karto::LocalizedRangeScan* SlamToolbox::getLocalizedRangeScan(
   karto::LaserRangeFinder* laser,
@@ -634,6 +698,22 @@ karto::LocalizedRangeScan* SlamToolbox::addScan(
   return range_scan;
 }
 
+/*****************************************************************************/
+void SlamToolbox::addTag(apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltag, karto::LocalizedRangeScan* scan) {
+/*****************************************************************************/
+  if (apriltag == nullptr) return;
+  boost::mutex::scoped_lock lock_a(apriltag_mutex_);
+  boost::mutex::scoped_lock lock_s(smapper_mutex_);
+  if (scan == nullptr) ROS_ERROR("\r\n\r\n\r\n\r\n\r\n**** SCAN POINTER IS NULL ****\r\n\r\n\r\n\r\n\r\n");
+  for (apriltag_ros::AprilTagDetection tag : apriltag->detections) {
+    // Only consider apriltag ids you have not seen before
+    // assume not group of tags
+    if (m_apriltag_to_scan_.find(tag.id[0]) == m_apriltag_to_scan_.end())
+      m_apriltag_to_scan_[tag.id[0]] = std::make_pair(tag.pose, scan);
+    publishTagTransform(tag.id[0]);
+  }
+}
+ 
 /*****************************************************************************/
 bool SlamToolbox::mapCallback(
   nav_msgs::GetMap::Request &req,
