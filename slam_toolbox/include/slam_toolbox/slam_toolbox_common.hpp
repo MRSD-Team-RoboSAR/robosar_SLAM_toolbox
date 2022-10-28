@@ -26,6 +26,7 @@
 #include "tf2_ros/message_filter.h"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "apriltag_ros/AprilTagDetectionArray.h"
 
 #include "pluginlib/class_loader.h"
 
@@ -36,6 +37,7 @@
 #include "slam_toolbox/get_pose_helper.hpp"
 #include "slam_toolbox/map_saver.hpp"
 #include "slam_toolbox/loop_closure_assistant.hpp"
+#include "robosar_messages/agent_status.h"
 
 #include <string>
 #include <map>
@@ -45,6 +47,7 @@
 #include <fstream>
 #include <boost/thread.hpp>
 #include <sys/resource.h>
+#include <assert.h>
 
 namespace slam_toolbox
 {
@@ -70,6 +73,7 @@ protected:
 
   // callbacks
   virtual void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan) = 0;
+  virtual void apriltagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltags) = 0;
   bool mapCallback(nav_msgs::GetMap::Request& req,
     nav_msgs::GetMap::Response& res);
   virtual bool serializePoseGraphCallback(slam_toolbox_msgs::SerializePoseGraph::Request& req,
@@ -84,14 +88,17 @@ protected:
   virtual karto::LocalizedRangeScan* addScan(karto::LaserRangeFinder* laser, const sensor_msgs::LaserScan::ConstPtr& scan,
     karto::Pose2& karto_pose);
   karto::LocalizedRangeScan* addScan(karto::LaserRangeFinder* laser, PosedScan& scanWPose);
+  void addTag(apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltag, karto::LocalizedRangeScan* scan);
   bool updateMap();
   tf2::Stamped<tf2::Transform> setTransformFromPoses(const karto::Pose2& pose,
-    const karto::Pose2& karto_pose, const ros::Time& t, const bool& update_reprocessing_transform);
+    const karto::Pose2& karto_pose, const std_msgs::Header& header, const bool& update_reprocessing_transform);
+  tf2::Stamped<tf2::Transform> publishTagTransform(int tag_id);
   karto::LocalizedRangeScan* getLocalizedRangeScan(karto::LaserRangeFinder* laser,
     const sensor_msgs::LaserScan::ConstPtr& scan,
     karto::Pose2& karto_pose);
   bool shouldStartWithPoseGraph(std::string& filename, geometry_msgs::Pose2D& pose, bool& start_at_dock);
   bool shouldProcessScan(const sensor_msgs::LaserScan::ConstPtr& scan, const karto::Pose2& pose);
+  std::set<std::string> getFleetStatusInfo();
 
   // pausing bits
   bool isPaused(const PausedApplication& app);
@@ -103,13 +110,17 @@ protected:
   std::unique_ptr<tf2_ros::Buffer> tf_;
   std::unique_ptr<tf2_ros::TransformListener> tfL_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tfB_;
-  std::unique_ptr<message_filters::Subscriber<sensor_msgs::LaserScan> > scan_filter_sub_;
-  std::unique_ptr<tf2_ros::MessageFilter<sensor_msgs::LaserScan> > scan_filter_;
-  ros::Publisher sst_, sstm_;
+  std::vector<std::unique_ptr<message_filters::Subscriber<sensor_msgs::LaserScan> > > scan_filter_subs_;
+  std::vector<std::unique_ptr<tf2_ros::MessageFilter<sensor_msgs::LaserScan> > > scan_filters_;
+  std::vector<std::unique_ptr<message_filters::Subscriber<apriltag_ros::AprilTagDetectionArray> > > apriltag_subs_;
+  std::vector<std::unique_ptr<apriltag_ros::AprilTagDetectionArray> > apriltags_;
+  ros::Publisher sst_, sstm_, tag_pub_;
   ros::ServiceServer ssMap_, ssPauseMeasurements_, ssSerialize_, ssDesserialize_;
+  ros::ServiceClient status_client_;
 
   // Storage for ROS parameters
-  std::string odom_frame_, map_frame_, base_frame_, map_name_, scan_topic_;
+  std::string map_frame_, map_name_;
+  std::vector<std::string> odom_frames_, base_frames_, laser_topics_, apriltag_topics_;
   ros::Duration transform_timeout_, tf_buffer_dur_, minimum_time_interval_;
   int throttle_scans_;
 
@@ -120,10 +131,13 @@ protected:
   std::unique_ptr<mapper_utils::SMapper> smapper_;
   std::unique_ptr<karto::Dataset> dataset_;
   std::map<std::string, laser_utils::LaserMetadata> lasers_;
+  std::map<std::string, tf2::Transform> m_map_to_odoms_;
+  std::map<int, tf2::Transform> m_map_to_tags_;
+  std::map<int, std::pair<geometry_msgs::PoseWithCovarianceStamped, karto::LocalizedRangeScan*>> m_apriltag_to_scan_;
 
   // helpers
-  std::unique_ptr<laser_utils::LaserAssistant> laser_assistant_;
-  std::unique_ptr<pose_utils::GetPoseHelper> pose_helper_;
+  std::map<std::string,std::unique_ptr<laser_utils::LaserAssistant>> laser_assistants_;
+  std::vector<std::unique_ptr<pose_utils::GetPoseHelper>> pose_helpers_;
   std::unique_ptr<map_saver::MapSaver> map_saver_;
   std::unique_ptr<loop_closure_assistant::LoopClosureAssistant> closure_assistant_;
   std::unique_ptr<laser_utils::ScanHolder> scan_holder_;
@@ -131,12 +145,14 @@ protected:
   // Internal state
   std::vector<std::unique_ptr<boost::thread> > threads_;
   tf2::Transform map_to_odom_;
-  boost::mutex map_to_odom_mutex_, smapper_mutex_, pose_mutex_;
+  std::string map_to_odom_child_frame_id_;
+  boost::mutex map_to_odom_mutex_, smapper_mutex_, pose_mutex_, apriltag_mutex_, map_to_tags_mutex_;
   PausedState state_;
   nav_msgs::GetMap::Response map_;
   ProcessType processor_type_;
   std::unique_ptr<karto::Pose2> process_near_pose_;
   tf2::Transform reprocessing_transform_;
+  std::set<std::string> fleet_info_;
 
   // pluginlib
   pluginlib::ClassLoader<karto::ScanSolver> solver_loader_;

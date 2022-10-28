@@ -34,12 +34,15 @@ public:
 
 protected:
   virtual void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan) override final;
+  virtual void apriltagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& apriltags) override final;
   bool clearQueueCallback(slam_toolbox_msgs::ClearQueue::Request& req, slam_toolbox_msgs::ClearQueue::Response& resp);
   virtual bool deserializePoseGraphCallback(slam_toolbox_msgs::DeserializePoseGraph::Request& req,
     slam_toolbox_msgs::DeserializePoseGraph::Response& resp) override final;
 
   std::queue<PosedScan> q_;
+  std::map<std::string, std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr> > agent_apriltags_q_m_;
   ros::ServiceServer ssClear_;
+  boost::mutex apriltag_q_mutex_;
 };
 
 }

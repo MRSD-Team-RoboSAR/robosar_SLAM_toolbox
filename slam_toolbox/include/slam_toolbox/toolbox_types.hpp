@@ -29,6 +29,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "slam_toolbox/toolbox_msgs.hpp"
 #include "karto_sdk/Mapper.h"
+#include "apriltag_ros/AprilTagDetectionArray.h"
 
 // compute linear index for given map coords
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
