@@ -2351,6 +2351,12 @@ namespace karto
         "Whether to increase the search space if no good matches are initially "
         "found.",
         false, GetParameterManager());
+
+    m_pMinimumScanMatchResponse = new Parameter<kt_double>(
+        "MinimumScanMatchResponse",
+        "Minimum value of the scan match response for it to be considered "
+        "for pose correction.",
+        0.0, GetParameterManager());
   }
   /* Adding in getters and setters here for easy parameter access */
 
@@ -2527,6 +2533,11 @@ namespace karto
     return static_cast<bool>(m_pUseResponseExpansion->GetValue());
   }
 
+  double Mapper::getParamMinimumScanMatchResponse()
+  {
+    return static_cast<double>(m_pMinimumDistancePenalty->GetValue());
+  }
+
   /* Setters for parameters */
   // General Parameters
   void Mapper::setParamUseScanMatching(bool b)
@@ -2698,6 +2709,12 @@ namespace karto
     m_pUseResponseExpansion->SetValue((kt_bool)b);
   }
 
+  void Mapper::setParamMinimumScanMatchResponse(double d)
+  {
+    m_pMinimumDistancePenalty->SetValue((kt_double)d);
+  }
+
+
 
 
   void Mapper::Initialize(kt_double rangeThreshold)
@@ -2836,11 +2853,13 @@ namespace karto
 		  if (m_pUseScanMatching->GetValue() && pLastScan != NULL)
 		  {
 			  Pose2 bestPose;
-			  m_pSequentialScanMatcher->MatchScan(pScan,
+			  kt_double scan_match_response = m_pSequentialScanMatcher->MatchScan(pScan,
 					  m_pMapperSensorManager->GetRunningScans(pScan->GetSensorName()),
 					  bestPose,
 					  covariance);
-			  pScan->SetSensorPose(bestPose);
+        // Only correct pose if scan matching is reasonable
+        if(scan_match_response > getParamMinimumScanMatchResponse())
+			    pScan->SetSensorPose(bestPose);
 		  }
 
 		  // add scan to buffer and assign id
