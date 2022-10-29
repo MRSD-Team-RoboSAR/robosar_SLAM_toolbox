@@ -1594,7 +1594,7 @@ namespace karto
         }
         else
         {
-          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Detected loop closure\r\n";
+          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Detected loop closure (response = " << fineResponse << ")\r\n";
           m_pMapper->FireBeginLoopClosure("Closing loop...");
 
           pScan->SetSensorPose(bestPose);
@@ -2853,13 +2853,13 @@ namespace karto
 		  if (m_pUseScanMatching->GetValue() && pLastScan != NULL)
 		  {
 			  Pose2 bestPose;
-			  m_pSequentialScanMatcher->MatchScan(pScan,
+			  kt_double resp = m_pSequentialScanMatcher->MatchScan(pScan,
 					  m_pMapperSensorManager->GetRunningScans(pScan->GetSensorName()),
 					  bestPose,
 					  covariance);
 			  pScan->SetSensorPose(bestPose);
-        std::cout << "[RoboSAR:Mapper:Process] Scan match"
-          << "\r\n    bestpose: "
+        std::cout << "[RoboSAR:Mapper:Process] Scan match (response: " << resp
+          << ")\r\n    bestpose: "
           << "(" << pScan->GetCorrectedPose().GetX()
           << ", " << pScan->GetCorrectedPose().GetY()
           << ", " << pScan->GetCorrectedPose().GetHeading()
