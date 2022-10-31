@@ -2353,6 +2353,9 @@ namespace karto
     // whether to increase the search space if no good matches are initially found
     Parameter<kt_bool>* m_pUseResponseExpansion;
 
+    // Threshold for ignoring scan if response is too low
+    Parameter<kt_double>* m_pMinimumScanMatchResponse;
+
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
@@ -2443,6 +2446,7 @@ namespace karto
     double getParamMinimumAnglePenalty();
     double getParamMinimumDistancePenalty();
     bool getParamUseResponseExpansion();
+    double getParamMinimumScanMatchResponse();
 
     /* Setters */
     // General Parameters
@@ -2485,6 +2489,7 @@ namespace karto
     void setParamMinimumAnglePenalty(double d);
     void setParamMinimumDistancePenalty(double d);
     void setParamUseResponseExpansion(bool b);
+    void setParamMinimumScanMatchResponse(double d);
   };
   BOOST_SERIALIZATION_ASSUME_ABSTRACT(Mapper)
 }  // namespace karto
