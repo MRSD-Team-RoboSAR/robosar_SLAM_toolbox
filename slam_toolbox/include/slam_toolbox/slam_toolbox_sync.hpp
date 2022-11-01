@@ -42,7 +42,7 @@ protected:
   std::queue<PosedScan> q_;
   std::map<std::string, std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr> > agent_apriltags_q_m_;
   ros::ServiceServer ssClear_;
-  boost::mutex apriltag_q_mutex_;
+  boost::mutex q_mutex_, apriltag_q_mutex_;
 };
 
 }

@@ -303,6 +303,12 @@ void SMapper::configure(const ros::NodeHandle& nh)
   {
     mapper_->setParamUseResponseExpansion(use_response_expansion);
   }
+
+  double minimum_scan_match_response;
+  if(nh.getParam("minimum_scan_match_response", minimum_scan_match_response))
+  {
+    mapper_->setParamMinimumScanMatchResponse(minimum_scan_match_response);
+  }
   return;
 }
 

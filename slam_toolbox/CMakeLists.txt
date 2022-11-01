@@ -31,6 +31,7 @@ find_package(catkin REQUIRED
     map_server
     slam_toolbox_msgs
     apriltag_ros
+    robosar_messages
 )
 
 find_package(PkgConfig REQUIRED)
