@@ -43,34 +43,44 @@ void SynchronousSlamToolbox::run()
   ros::Rate r(100);
   while(ros::ok())
   {
-    if (!q_.empty() && !isPaused(PROCESSING))
+    if (!isPaused(PROCESSING))
     {
-      PosedScan scan_w_pose = q_.front();
-      q_.pop();
-
-      if (q_.size() > 10)
+      PosedScan scan_w_pose(nullptr, karto::Pose2()); // dummy, updated in critical section
+      bool queue_empty = true;
       {
-        ROS_WARN_THROTTLE(10., "Queue size has grown to: %i. "
-          "Recommend stopping until message is gone if online mapping.",
-          (int)q_.size());
+        boost::mutex::scoped_lock lock(q_mutex_);
+        queue_empty = q_.empty();
+        if(!queue_empty)
+        {
+          scan_w_pose = q_.front();
+          q_.pop();
+
+          if (q_.size() > 10)
+          {
+            ROS_WARN_THROTTLE(10., "Queue size has grown to: %i. "
+              "Recommend stopping until message is gone if online mapping.",
+              (int)q_.size());
+          }
+        }
       }
-
-      // Process scan with pose
-      karto::LocalizedRangeScan* karto_scan = addScan(getLaser(scan_w_pose.scan), scan_w_pose);
-      // Tie this agent's pose with this agent's apriltag array detections
-      if (karto_scan)
-      {
-        // Get this agent's name
-        std::stringstream ss(scan_w_pose.scan->header.frame_id);
-        std::string frame_id;
-        std::getline(ss, frame_id, '/');
-        boost::mutex::scoped_lock lock(apriltag_q_mutex_);
-        // Get this agent's queue
-        std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>& cur_queue = agent_apriltags_q_m_[frame_id];
-        // Go through entire queue
-        while(!cur_queue.empty()){
-          addTag(cur_queue.front(), karto_scan);
-          cur_queue.pop();
+      if(!queue_empty){
+        // Process scan with pose
+        karto::LocalizedRangeScan* karto_scan = addScan(getLaser(scan_w_pose.scan), scan_w_pose);
+        // Tie this agent's pose with this agent's apriltag array detections
+        if (karto_scan)
+        {
+          // Get this agent's name
+          std::stringstream ss(scan_w_pose.scan->header.frame_id);
+          std::string frame_id;
+          std::getline(ss, frame_id, '/');
+          boost::mutex::scoped_lock lock(apriltag_q_mutex_);
+          // Get this agent's queue
+          std::queue<apriltag_ros::AprilTagDetectionArray::ConstPtr>& cur_queue = agent_apriltags_q_m_[frame_id];
+          // Go through entire queue
+          while(!cur_queue.empty()){
+            addTag(cur_queue.front(), karto_scan);
+            cur_queue.pop();
+          }
         }
       }
     }
@@ -109,6 +119,7 @@ void SynchronousSlamToolbox::laserCallback(
   // if sync and valid, add to queue
   if (shouldProcessScan(scan, pose))
   {
+    boost::mutex::scoped_lock lock(q_mutex_);
     q_.push(PosedScan(scan, pose));
   }
 
