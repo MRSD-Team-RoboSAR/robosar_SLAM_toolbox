@@ -596,7 +596,7 @@ bool SlamToolbox::shouldProcessScan(
 std::set<std::string> SlamToolbox::getFleetStatusInfo()
 {
   robosar_messages::agent_status srv;
-  if (status_client_.waitForExistence(ros::Duration(10)))
+  if (status_client_.waitForExistence(ros::Duration(50)))
   {
     if (status_client_.call(srv))
     {
