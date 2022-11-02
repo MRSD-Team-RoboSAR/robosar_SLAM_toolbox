@@ -29,6 +29,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <shared_mutex>
+#include <queue>
 
 #include <math.h>
 #include <float.h>
@@ -1062,8 +1063,8 @@ namespace karto
      */
     inline void MakeFloor(const Vector2& rOther)
     {
-      if ( rOther.m_Values[0] < m_Values[0] ) m_Values[0] = rOther.m_Values[0];
-      if ( rOther.m_Values[1] < m_Values[1] ) m_Values[1] = rOther.m_Values[1];
+      if ( (rOther.m_Values[0]-1) < m_Values[0] ) m_Values[0] = (rOther.m_Values[0]-1);
+      if ( (rOther.m_Values[1]-1) < m_Values[1] ) m_Values[1] = (rOther.m_Values[1]-1);
     }
 
     /**
@@ -1072,8 +1073,8 @@ namespace karto
      */
     inline void MakeCeil(const Vector2& rOther)
     {
-      if ( rOther.m_Values[0] > m_Values[0] ) m_Values[0] = rOther.m_Values[0];
-      if ( rOther.m_Values[1] > m_Values[1] ) m_Values[1] = rOther.m_Values[1];
+      if ( (rOther.m_Values[0]+1) > m_Values[0] ) m_Values[0] = (rOther.m_Values[0]+1);
+      if ( (rOther.m_Values[1]+1) > m_Values[1] ) m_Values[1] = (rOther.m_Values[1]+1);
     }
 
     /**
@@ -5757,6 +5758,7 @@ namespace karto
         kt_double minimumAngle = pLaserRangeFinder->GetMinimumAngle();
         kt_double angularResolution = pLaserRangeFinder->GetAngularResolution();
         Pose2 scanPose = GetSensorPose();
+        std::cout << "Min, max, thresh range = " << pLaserRangeFinder->GetMinimumRange() << ", " << pLaserRangeFinder->GetMaximumRange() << ", " << pLaserRangeFinder->GetRangeThreshold() << "\r\n";
 
         // compute point readings
         Vector2<kt_double> rangePointsSum;
@@ -6255,6 +6257,63 @@ namespace karto
     }
 
     /**
+     * @brief Get the regions of invalid readings
+     * 
+     * @param pScan localized range scan which contains scan of interest
+     * @return std::queue<std::pair<int,int>> queue of ranges of invalid regions (inclusive)
+     */
+    std::queue<std::pair<int,int>> getInvalidRegions(LocalizedRangeScan* pScan)
+    {
+      std::queue<std::pair<int,int>> invalid_regions;
+      // Extract range readings and length
+      kt_double* rangeReadings = pScan->GetRangeReadings();
+      kt_int32u numReadings = pScan->GetNumberOfRangeReadings();
+      bool was_valid = true;
+      bool in_region = false;
+      std::pair<int,int> cur_range;
+      for (kt_int32u i = 0; i < numReadings; i++)
+      {
+        // Get current range reading
+        kt_double rangeReading = rangeReadings[i];
+        // See if range reading is valid
+        bool is_valid = math::InRange(rangeReading, pScan->GetLaserRangeFinder()->GetMinimumRange(), pScan->GetLaserRangeFinder()->GetMaximumRange());
+        // Compare is_valid vs was_valid
+        // If was_valid = true, is_valid = true, continue on
+        if(was_valid == true && is_valid == true)
+        {
+          in_region = false;
+        }
+        // If was_valid = true, is_valid = false, start invalid region
+        else if(was_valid == true && is_valid == false)
+        {
+          in_region = true;
+          cur_range.first = i;
+        }
+        // If was_valid = false, is_valid = false, continue invalid region
+        else if(was_valid == false && is_valid == false)
+        {
+          // inside of region; continue on
+          in_region = true;
+        }
+        // If was_valid = false, is_valid = true, end region
+        else if(was_valid == false && is_valid == true)
+        {
+          in_region = false;
+          cur_range.second = i-1;
+          invalid_regions.push(cur_range);
+        }
+        was_valid = is_valid;
+      }
+      // If invalid region goes all the way to end, wrap it up
+      if(in_region)
+      {
+        cur_range.second = numReadings-1;
+        invalid_regions.push(cur_range);
+      }
+      return invalid_regions;
+    }
+
+    /**
      * Adds the scan's information to this grid's counters (optionally
      * update the grid's cells' occupancy status)
      * @param pScan
@@ -6276,10 +6335,12 @@ namespace karto
 
       // draw lines from scan position to all point readings
       int pointIndex = 0;
+      std::cout << "Range reading: ";
       const_forEachAs(PointVectorDouble, &rPointReadings, pointsIter)
       {
         Vector2<kt_double> point = *pointsIter;
         kt_double rangeReading = pScan->GetRangeReadings()[pointIndex];
+        std::cout << rangeReading << ", ";
 
         // lidar was giving range reading as 0 instead of infinity for points out of range
         // thus condition of end point validity needed to be changed from having only a upper bound to being in a range
@@ -6311,6 +6372,16 @@ namespace karto
 
         pointIndex++;
       }
+      std::cout << "\r\n";
+      std::cout << "Invalid regions: \r\n";
+      std::queue<std::pair<int,int>> inval_regions = getInvalidRegions(pScan);
+      while(!inval_regions.empty())
+      {
+        std::pair<int,int> cur_pair = inval_regions.front();
+        inval_regions.pop();
+        std::cout << "(" << cur_pair.first << ", " << cur_pair.second << "), ";
+      }
+      std::cout << "\r\n\r\n\r\n\r\n";
 
       return isAllInMap;
     }
