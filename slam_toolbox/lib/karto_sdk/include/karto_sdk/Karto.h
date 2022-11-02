@@ -6314,6 +6314,32 @@ namespace karto
     }
 
     /**
+     * @brief Given invalid regions, compute which regions are trustworthy
+     * 
+     * @param invalid_regions inclusive range of readings that are invalid
+     * @param deadband band of no trust
+     * @return std::queue<std::pair<int,int>> inclusive range of readings that can be trusted
+     */
+    std::queue<std::pair<int,int>> getTrustRegions(std::queue<std::pair<int,int>> invalid_regions, int deadband)
+    {
+      std::queue<std::pair<int,int>> trust_regions;
+      while(!invalid_regions.empty())
+      {
+        // Get current pair
+        std::pair<int,int> cur_pair = invalid_regions.front();
+        invalid_regions.pop();
+        // Compute length
+        int region_length = cur_pair.second - cur_pair.first + 1;
+        // See if region is large enough for any trust region to be established
+        // If region is large enough, so reduce it by deadband on both sides
+        if(region_length - 2*deadband <= 0)
+          continue;
+        else
+          trust_regions.push({cur_pair.first+deadband, cur_pair.second-deadband});
+      }
+      return trust_regions;
+    }
+    /**
      * Adds the scan's information to this grid's counters (optionally
      * update the grid's cells' occupancy status)
      * @param pScan
@@ -6373,12 +6399,20 @@ namespace karto
         pointIndex++;
       }
       std::cout << "\r\n";
-      std::cout << "Invalid regions: \r\n";
       std::queue<std::pair<int,int>> inval_regions = getInvalidRegions(pScan);
+      std::queue<std::pair<int,int>> trust_regions = getTrustRegions(inval_regions, 5);
+      std::cout << "Invalid regions: \r\n";
       while(!inval_regions.empty())
       {
         std::pair<int,int> cur_pair = inval_regions.front();
         inval_regions.pop();
+        std::cout << "(" << cur_pair.first << ", " << cur_pair.second << "), ";
+      }
+      std::cout << "\r\nTrust regions: \r\n";
+      while(!trust_regions.empty())
+      {
+        std::pair<int,int> cur_pair = trust_regions.front();
+        trust_regions.pop();
         std::cout << "(" << cur_pair.first << ", " << cur_pair.second << "), ";
       }
       std::cout << "\r\n\r\n\r\n\r\n";
