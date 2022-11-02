@@ -5758,7 +5758,6 @@ namespace karto
         kt_double minimumAngle = pLaserRangeFinder->GetMinimumAngle();
         kt_double angularResolution = pLaserRangeFinder->GetAngularResolution();
         Pose2 scanPose = GetSensorPose();
-        std::cout << "Min, max, thresh range = " << pLaserRangeFinder->GetMinimumRange() << ", " << pLaserRangeFinder->GetMaximumRange() << ", " << pLaserRangeFinder->GetRangeThreshold() << "\r\n";
 
         // compute point readings
         Vector2<kt_double> rangePointsSum;
@@ -6395,12 +6394,10 @@ namespace karto
       std::queue<std::pair<int,int>> trust_regions = getTrustRegions(inval_regions, 20);
       // draw lines from scan position to all point readings
       int pointIndex = 0;
-      std::cout << "Range reading: ";
       const_forEachAs(PointVectorDouble, &rPointReadings, pointsIter)
       {
         Vector2<kt_double> point = *pointsIter;
         kt_double rangeReading = pScan->GetRangeReadings()[pointIndex];
-        std::cout << rangeReading << ", ";
 
         // lidar was giving range reading as 0 instead of infinity for points out of range
         // thus condition of end point validity needed to be changed from having only a upper bound to being in a range
@@ -6440,22 +6437,6 @@ namespace karto
 
         pointIndex++;
       }
-      std::cout << "\r\n";
-      std::cout << "Invalid regions: \r\n";
-      while(!inval_regions.empty())
-      {
-        std::pair<int,int> cur_pair = inval_regions.front();
-        inval_regions.pop();
-        std::cout << "(" << cur_pair.first << ", " << cur_pair.second << "), ";
-      }
-      std::cout << "\r\nTrust regions: \r\n";
-      while(!trust_regions.empty())
-      {
-        std::pair<int,int> cur_pair = trust_regions.front();
-        trust_regions.pop();
-        std::cout << "(" << cur_pair.first << ", " << cur_pair.second << "), ";
-      }
-      std::cout << "\r\n\r\n\r\n\r\n";
 
       return isAllInMap;
     }
