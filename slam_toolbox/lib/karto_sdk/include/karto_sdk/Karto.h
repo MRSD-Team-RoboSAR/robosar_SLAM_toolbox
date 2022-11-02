@@ -6339,6 +6339,37 @@ namespace karto
       }
       return trust_regions;
     }
+
+    /**
+     * @brief Determines if point is trustworthy
+     * 
+     * @param trust_regions regions of trust
+     * @param minRange minimum range of laser scanner
+     * @param range range measurement of current point
+     * @param index index of current point
+     * @return true if point should be used for raytracing
+     * @return false if point should not be used for raytracing
+     */
+    bool isTrustworthy(std::queue<std::pair<int,int>> trust_regions, kt_double minRange, kt_double range, int index)
+    {
+      // Only worry about readings below minimum
+      if(range > minRange)
+        return true;
+      // If below min, see if in trust region
+      while(!trust_regions.empty())
+      {
+        std::pair<int,int> cur_region = trust_regions.front();
+        trust_regions.pop();
+        if(index >= cur_region.first && index <= cur_region.second)
+        {
+          // Point resides in trust region
+          return true;
+        }
+      }
+      // Point was not in trust region
+      return false;
+      
+    }
     /**
      * Adds the scan's information to this grid's counters (optionally
      * update the grid's cells' occupancy status)
@@ -6359,6 +6390,9 @@ namespace karto
 
       kt_bool isAllInMap = true;
 
+      // Get trust regions
+      std::queue<std::pair<int,int>> inval_regions = getInvalidRegions(pScan);
+      std::queue<std::pair<int,int>> trust_regions = getTrustRegions(inval_regions, 20);
       // draw lines from scan position to all point readings
       int pointIndex = 0;
       std::cout << "Range reading: ";
@@ -6372,6 +6406,14 @@ namespace karto
         // thus condition of end point validity needed to be changed from having only a upper bound to being in a range
         kt_bool isEndPointValid = math::InRange(rangeReading, minRange, rangeThreshold - KT_TOLERANCE);
 
+        if (!isTrustworthy(trust_regions, minRange, rangeReading, pointIndex))
+        {
+          // Measurement is not trustworthy, most likely shallow incident angle
+          // and there is an obstacle that wasn't detected
+          // ignore these readings
+          pointIndex++;
+          continue;
+        }
         if (std::isnan(rangeReading))
         {
           // only ignore readings which are nan.
@@ -6399,8 +6441,6 @@ namespace karto
         pointIndex++;
       }
       std::cout << "\r\n";
-      std::queue<std::pair<int,int>> inval_regions = getInvalidRegions(pScan);
-      std::queue<std::pair<int,int>> trust_regions = getTrustRegions(inval_regions, 5);
       std::cout << "Invalid regions: \r\n";
       while(!inval_regions.empty())
       {
