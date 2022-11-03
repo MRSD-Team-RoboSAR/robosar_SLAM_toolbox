@@ -400,7 +400,7 @@ Visualization Manager:
           Marker Topic: /lazy_traffic_controller/agent1/vel_marker
           Name: Marker
           Namespaces:
-            vel_marker: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -408,7 +408,7 @@ Visualization Manager:
           Marker Topic: /lazy_traffic_controller/agent2/vel_marker
           Name: Marker
           Namespaces:
-            vel_marker: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -416,11 +416,27 @@ Visualization Manager:
           Marker Topic: /lazy_traffic_controller/agent3/vel_marker
           Name: Marker
           Namespaces:
-            vel_marker: true
+            {}
           Queue Size: 100
           Value: true
       Enabled: true
       Name: Controller vis
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /frontier_filter/frontier_centroids
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /frontier_rrt_search_node_shapes
+      Name: Marker
+      Namespaces:
+        markers: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -458,10 +474,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 123.75533294677734
+      Scale: 65.30963897705078
       Target Frame: <Fixed Frame>
-      X: 1.168864369392395
-      Y: -1.0647799968719482
+      X: 2.7918612957000732
+      Y: -2.562866687774658
     Saved: ~
 Window Geometry:
   Displays:

@@ -1062,8 +1062,8 @@ namespace karto
      */
     inline void MakeFloor(const Vector2& rOther)
     {
-      if ( rOther.m_Values[0] < m_Values[0] ) m_Values[0] = rOther.m_Values[0];
-      if ( rOther.m_Values[1] < m_Values[1] ) m_Values[1] = rOther.m_Values[1];
+      if ( (rOther.m_Values[0]-1) < m_Values[0] ) m_Values[0] = (rOther.m_Values[0]-1);
+      if ( (rOther.m_Values[1]-1) < m_Values[1] ) m_Values[1] = (rOther.m_Values[1]-1);
     }
 
     /**
@@ -1072,8 +1072,8 @@ namespace karto
      */
     inline void MakeCeil(const Vector2& rOther)
     {
-      if ( rOther.m_Values[0] > m_Values[0] ) m_Values[0] = rOther.m_Values[0];
-      if ( rOther.m_Values[1] > m_Values[1] ) m_Values[1] = rOther.m_Values[1];
+      if ( (rOther.m_Values[0]+1) > m_Values[0] ) m_Values[0] = (rOther.m_Values[0]+1);
+      if ( (rOther.m_Values[1]+1) > m_Values[1] ) m_Values[1] = (rOther.m_Values[1]+1);
     }
 
     /**
