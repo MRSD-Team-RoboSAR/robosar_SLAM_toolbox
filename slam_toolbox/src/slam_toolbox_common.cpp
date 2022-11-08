@@ -496,11 +496,11 @@ tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id, const 
   m.header.frame_id = map_to_tag_msg.frame_id_;
   m.ns = agent_name;
   m.id = tag_id;
-  m.type = 2;
+  m.type = 3; // cylinder
   m.action = 0;
-  m.scale.x = 0.3;
-  m.scale.y = 0.3;
-  m.scale.z = 0.3;
+  m.scale.x = 0.2;
+  m.scale.y = 0.2;
+  m.scale.z = 0.2;
   m.color.r = 1;
   m.color.g = 0;
   m.color.b = 1;
