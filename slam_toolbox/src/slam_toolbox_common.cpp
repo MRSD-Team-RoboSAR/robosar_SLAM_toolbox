@@ -250,7 +250,7 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
     {
       std::map<int, std::pair<geometry_msgs::PoseWithCovarianceStamped, karto::LocalizedRangeScan*>>::iterator iter;
       for (iter = m_apriltag_to_scan_.begin(); iter != m_apriltag_to_scan_.end(); iter++) {
-        publishTagTransform(iter->first);
+        publishTagTransform(iter->first, iter->second.second->GetSensorName());
       }
     }
 
@@ -465,11 +465,14 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
 
 
 /*****************************************************************************/
-tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id) {
+tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id, const karto::Name& sensor_name) {
 /*****************************************************************************/
   boost::mutex::scoped_lock lock(map_to_tags_mutex_);
   geometry_msgs::PoseWithCovarianceStamped scan_to_tag = m_apriltag_to_scan_[tag_id].first;
   karto::Pose2 corrected_pose = m_apriltag_to_scan_[tag_id].second->GetCorrectedPose();
+  
+  // Get this agent's name
+  std::string agent_name = sensor_name.GetScope();
   
   // Compute the map->base transform
   const ros::Time& t = scan_to_tag.header.stamp;
@@ -491,13 +494,13 @@ tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id) {
   m.pose.orientation.z = 0;
   m.pose.orientation.w = 1;
   m.header.frame_id = map_to_tag_msg.frame_id_;
-  m.ns = map_to_tag_msg.frame_id_;
+  m.ns = agent_name;
   m.id = tag_id;
-  m.type = 2;
+  m.type = 3; // cylinder
   m.action = 0;
-  m.scale.x = 0.3;
-  m.scale.y = 0.3;
-  m.scale.z = 0.3;
+  m.scale.x = 0.2;
+  m.scale.y = 0.2;
+  m.scale.z = 0.2;
   m.color.r = 1;
   m.color.g = 0;
   m.color.b = 1;
@@ -711,7 +714,7 @@ void SlamToolbox::addTag(apriltag_ros::AprilTagDetectionArray::ConstPtr& aprilta
     // assume not group of tags
     if (m_apriltag_to_scan_.find(tag.id[0]) == m_apriltag_to_scan_.end())
       m_apriltag_to_scan_[tag.id[0]] = std::make_pair(tag.pose, scan);
-    publishTagTransform(tag.id[0]);
+    publishTagTransform(tag.id[0], scan->GetSensorName());
   }
 }
  
