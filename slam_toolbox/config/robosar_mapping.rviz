@@ -3,7 +3,11 @@ Panels:
     Help Height: 0
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /LaserScan1
+        - /LaserScan2
+        - /LaserScan3
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 270
   - Class: rviz/Selection
@@ -77,6 +81,7 @@ Visualization Manager:
       Name: MarkerArray
       Namespaces:
         slam_toolbox: true
+        slam_toolbox/graph_edges: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -108,10 +113,94 @@ Visualization Manager:
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
-      Size (Pixels): 3
+      Size (Pixels): 10
       Size (m): 0.009999999776482582
       Style: Points
       Topic: /robosar_agent_bringup_node/agent1/feedback/scan
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: false
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/LaserScan
+      Color: 239; 41; 41
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 239; 41; 41
+      Min Color: 239; 41; 41
+      Name: LaserScan
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 10
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /robosar_agent_bringup_node/agent2/feedback/scan
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: false
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/LaserScan
+      Color: 78; 154; 6
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 239; 41; 41
+      Min Color: 239; 41; 41
+      Name: LaserScan
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 10
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /robosar_agent_bringup_node/agent3/feedback/scan
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: false
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/LaserScan
+      Color: 92; 53; 102
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 239; 41; 41
+      Min Color: 239; 41; 41
+      Name: LaserScan
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 10
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /robosar_agent_bringup_node/agent4/feedback/scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: false
@@ -149,6 +238,51 @@ Visualization Manager:
       Reference Frame: map
       Show Trail: false
       Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        agent1/base_link:
+          Value: true
+        agent1/odom:
+          Value: true
+        agent2/base_link:
+          Value: true
+        agent2/odom:
+          Value: true
+        agent3/base_link:
+          Value: true
+        agent3/odom:
+          Value: true
+        agent4/base_link:
+          Value: true
+        agent4/odom:
+          Value: true
+        map:
+          Value: true
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        map:
+          agent1/odom:
+            agent1/base_link:
+              {}
+          agent2/odom:
+            agent2/base_link:
+              {}
+          agent3/odom:
+            agent3/base_link:
+              {}
+          agent4/odom:
+            agent4/base_link:
+              {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 237; 237; 237
@@ -171,13 +305,13 @@ Visualization Manager:
     - Class: rviz/SetGoal
       Topic: /move_base_simple/goal
     - Class: rviz/PublishPoint
-      Single click: true
+      Single click: false
       Topic: /clicked_point
   Value: true
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 14.895085334777832
+      Distance: 10.321182250976562
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -185,17 +319,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 4.8339643478393555
-        Y: 0.5798134207725525
+        X: -0.7534375786781311
+        Y: 1.2859885692596436
         Z: 0.01008774433284998
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.5297963619232178
       Target Frame: map
-      Yaw: 1.5850666761398315
+      Yaw: 1.5550661087036133
     Saved: ~
 Window Geometry:
   Displays:

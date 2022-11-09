@@ -29,6 +29,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <shared_mutex>
+#include <queue>
 
 #include <math.h>
 #include <float.h>
@@ -1062,8 +1063,8 @@ namespace karto
      */
     inline void MakeFloor(const Vector2& rOther)
     {
-      if ( rOther.m_Values[0] < m_Values[0] ) m_Values[0] = rOther.m_Values[0];
-      if ( rOther.m_Values[1] < m_Values[1] ) m_Values[1] = rOther.m_Values[1];
+      if ( (rOther.m_Values[0]-1) < m_Values[0] ) m_Values[0] = (rOther.m_Values[0]-1);
+      if ( (rOther.m_Values[1]-1) < m_Values[1] ) m_Values[1] = (rOther.m_Values[1]-1);
     }
 
     /**
@@ -1072,8 +1073,8 @@ namespace karto
      */
     inline void MakeCeil(const Vector2& rOther)
     {
-      if ( rOther.m_Values[0] > m_Values[0] ) m_Values[0] = rOther.m_Values[0];
-      if ( rOther.m_Values[1] > m_Values[1] ) m_Values[1] = rOther.m_Values[1];
+      if ( (rOther.m_Values[0]+1) > m_Values[0] ) m_Values[0] = (rOther.m_Values[0]+1);
+      if ( (rOther.m_Values[1]+1) > m_Values[1] ) m_Values[1] = (rOther.m_Values[1]+1);
     }
 
     /**
@@ -6255,6 +6256,120 @@ namespace karto
     }
 
     /**
+     * @brief Get the regions of invalid readings
+     * 
+     * @param pScan localized range scan which contains scan of interest
+     * @return std::queue<std::pair<int,int>> queue of ranges of invalid regions (inclusive)
+     */
+    std::queue<std::pair<int,int>> getInvalidRegions(LocalizedRangeScan* pScan)
+    {
+      std::queue<std::pair<int,int>> invalid_regions;
+      // Extract range readings and length
+      kt_double* rangeReadings = pScan->GetRangeReadings();
+      kt_int32u numReadings = pScan->GetNumberOfRangeReadings();
+      bool was_valid = true;
+      bool in_region = false;
+      std::pair<int,int> cur_range;
+      for (kt_int32u i = 0; i < numReadings; i++)
+      {
+        // Get current range reading
+        kt_double rangeReading = rangeReadings[i];
+        // See if range reading is valid
+        bool is_valid = math::InRange(rangeReading, pScan->GetLaserRangeFinder()->GetMinimumRange(), pScan->GetLaserRangeFinder()->GetMaximumRange());
+        // Compare is_valid vs was_valid
+        // If was_valid = true, is_valid = true, continue on
+        if(was_valid == true && is_valid == true)
+        {
+          in_region = false;
+        }
+        // If was_valid = true, is_valid = false, start invalid region
+        else if(was_valid == true && is_valid == false)
+        {
+          in_region = true;
+          cur_range.first = i;
+        }
+        // If was_valid = false, is_valid = false, continue invalid region
+        else if(was_valid == false && is_valid == false)
+        {
+          // inside of region; continue on
+          in_region = true;
+        }
+        // If was_valid = false, is_valid = true, end region
+        else if(was_valid == false && is_valid == true)
+        {
+          in_region = false;
+          cur_range.second = i-1;
+          invalid_regions.push(cur_range);
+        }
+        was_valid = is_valid;
+      }
+      // If invalid region goes all the way to end, wrap it up
+      if(in_region)
+      {
+        cur_range.second = numReadings-1;
+        invalid_regions.push(cur_range);
+      }
+      return invalid_regions;
+    }
+
+    /**
+     * @brief Given invalid regions, compute which regions are trustworthy
+     * 
+     * @param invalid_regions inclusive range of readings that are invalid
+     * @param deadband band of no trust
+     * @return std::queue<std::pair<int,int>> inclusive range of readings that can be trusted
+     */
+    std::queue<std::pair<int,int>> getTrustRegions(std::queue<std::pair<int,int>> invalid_regions, int deadband)
+    {
+      std::queue<std::pair<int,int>> trust_regions;
+      while(!invalid_regions.empty())
+      {
+        // Get current pair
+        std::pair<int,int> cur_pair = invalid_regions.front();
+        invalid_regions.pop();
+        // Compute length
+        int region_length = cur_pair.second - cur_pair.first + 1;
+        // See if region is large enough for any trust region to be established
+        // If region is large enough, so reduce it by deadband on both sides
+        if(region_length - 2*deadband <= 0)
+          continue;
+        else
+          trust_regions.push({cur_pair.first+deadband, cur_pair.second-deadband});
+      }
+      return trust_regions;
+    }
+
+    /**
+     * @brief Determines if point is trustworthy
+     * 
+     * @param trust_regions regions of trust
+     * @param minRange minimum range of laser scanner
+     * @param range range measurement of current point
+     * @param index index of current point
+     * @return true if point should be used for raytracing
+     * @return false if point should not be used for raytracing
+     */
+    bool isTrustworthy(std::queue<std::pair<int,int>> trust_regions, kt_double minRange, kt_double range, int index)
+    {
+      // Only worry about readings below minimum
+      if(range > minRange)
+        return true;
+      // If below min, see if in trust region
+      while(!trust_regions.empty())
+      {
+        std::pair<int,int> cur_region = trust_regions.front();
+        trust_regions.pop();
+        if(index >= cur_region.first && index <= cur_region.second)
+        {
+          // Point resides in trust region
+          return true;
+        }
+      }
+      // Point was not in trust region
+      return false;
+      
+    }
+    /**
      * Adds the scan's information to this grid's counters (optionally
      * update the grid's cells' occupancy status)
      * @param pScan
@@ -6274,6 +6389,9 @@ namespace karto
 
       kt_bool isAllInMap = true;
 
+      // Get trust regions
+      std::queue<std::pair<int,int>> inval_regions = getInvalidRegions(pScan);
+      std::queue<std::pair<int,int>> trust_regions = getTrustRegions(inval_regions, 20);
       // draw lines from scan position to all point readings
       int pointIndex = 0;
       const_forEachAs(PointVectorDouble, &rPointReadings, pointsIter)
@@ -6285,6 +6403,14 @@ namespace karto
         // thus condition of end point validity needed to be changed from having only a upper bound to being in a range
         kt_bool isEndPointValid = math::InRange(rangeReading, minRange, rangeThreshold - KT_TOLERANCE);
 
+        if (!isTrustworthy(trust_regions, minRange, rangeReading, pointIndex))
+        {
+          // Measurement is not trustworthy, most likely shallow incident angle
+          // and there is an obstacle that wasn't detected
+          // ignore these readings
+          pointIndex++;
+          continue;
+        }
         if (std::isnan(rangeReading))
         {
           // only ignore readings which are nan.

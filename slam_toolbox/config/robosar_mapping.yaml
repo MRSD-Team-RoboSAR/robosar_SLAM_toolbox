@@ -8,10 +8,10 @@ ceres_loss_function: None
 
 # ROS Parameters
 map_frame: map
-odom_frames: ["agent1/odom", "agent2/odom"]
-base_frames: ["agent1/base_link", "agent2/base_link"]
-laser_topics: ["/robosar_agent_bringup_node/agent1/feedback/scan", "/robosar_agent_bringup_node/agent2/feedback/scan"]
-apriltag_topics: ["/robosar_agent_bringup_node/agent1/feedback/apriltag", "/robosar_agent_bringup_node/agent2/feedback/apriltag"]
+odom_frames: ["agent1/odom", "agent2/odom", "agent3/odom", "agent4/odom"]
+base_frames: ["agent1/base_link", "agent2/base_link", "agent3/base_link", "agent4/base_link"]
+laser_topics: ["/robosar_agent_bringup_node/agent1/feedback/scan", "/robosar_agent_bringup_node/agent2/feedback/scan", "/robosar_agent_bringup_node/agent3/feedback/scan", "/robosar_agent_bringup_node/agent4/feedback/scan"]
+apriltag_topics: ["/robosar_agent_bringup_node/agent1/feedback/apriltag", "/robosar_agent_bringup_node/agent2/feedback/apriltag", "/robosar_agent_bringup_node/agent3/feedback/apriltag", "/robosar_agent_bringup_node/agent4/feedback/apriltag"]
 mode: mapping
 
 # if you'd like to immediately start continuing a map at a given pose
@@ -22,9 +22,9 @@ mode: mapping
 debug_logging: false
 throttle_scans: 1
 transform_publish_period: 0.02 #if 0 never publishes odometry
-map_update_interval: 5.0
+map_update_interval: 1.0
 resolution: 0.05
-max_laser_range: 4.0 #for rastering images
+max_laser_range: 5.0 #for rastering images
 minimum_time_interval: 0.5
 transform_timeout: 0.2
 tf_buffer_duration: 30.
@@ -39,12 +39,12 @@ minimum_travel_heading: 0.5
 scan_buffer_size: 10
 scan_buffer_maximum_scan_distance: 10
 link_match_minimum_response_fine: 0.5  
-link_scan_maximum_distance: 1.5
+link_scan_maximum_distance: 2.0
 do_loop_closing: true 
-loop_match_minimum_chain_size: 10           
+loop_match_minimum_chain_size: 5
 loop_match_maximum_variance_coarse: 3.0  
-loop_match_minimum_response_coarse: 0.45
-loop_match_minimum_response_fine: 0.55
+loop_match_minimum_response_coarse: 0.7
+loop_match_minimum_response_fine: 0.82
 
 # Correlation Parameters - Correlation Parameters
 correlation_search_space_dimension: 0.5
