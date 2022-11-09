@@ -19,6 +19,7 @@ find_package(catkin REQUIRED
     karto_sdk
     rosconsole
     roscpp
+    rospy
     sensor_msgs
     sparse_bundle_adjustment
     tf2
@@ -33,6 +34,11 @@ find_package(catkin REQUIRED
     apriltag_ros
     robosar_messages
 )
+
+## Uncomment this if the package has a setup.py. This macro ensures
+## modules and global scripts declared therein get installed
+## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+catkin_python_setup()
 
 find_package(PkgConfig REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -71,6 +77,7 @@ catkin_package(
       nav_msgs
       rosconsole
       roscpp
+      rospy
       sparse_bundle_adjustment
       sensor_msgs
       tf2
@@ -129,6 +136,10 @@ target_link_libraries(lifelong_slam_toolbox_node lifelong_slam_toolbox)
 add_executable(merge_maps_kinematic src/merge_maps_kinematic.cpp)
 target_link_libraries(merge_maps_kinematic toolbox_common)
 
+catkin_install_python(PROGRAMS
+  scripts/map_filter.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 #### testing
 #if(CATKIN_ENABLE_TESTING)
 #  include_directories(test)
