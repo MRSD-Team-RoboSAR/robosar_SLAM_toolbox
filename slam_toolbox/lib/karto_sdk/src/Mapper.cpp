@@ -1569,6 +1569,7 @@ namespace karto
           (covariance(0, 0) < m_pMapper->m_pLoopMatchMaximumVarianceCoarse->GetValue()) &&
           (covariance(1, 1) < m_pMapper->m_pLoopMatchMaximumVarianceCoarse->GetValue()))
       {
+        std::cout << "\r\n[RoboSAR:Mapper:TryCloseLoop] Loop closure candidate passed coarse response threshold (response = " << coarseResponse << ")\r\n";
         LocalizedRangeScan tmpScan(pScan->GetSensorName(), pScan->GetRangeReadingsVector());
         tmpScan.SetUniqueId(pScan->GetUniqueId());
         tmpScan.SetTime(pScan->GetTime());
@@ -1585,10 +1586,12 @@ namespace karto
 
         if (fineResponse < m_pMapper->m_pLoopMatchMinimumResponseFine->GetValue())
         {
+          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Loop closure candidate FAILED fine response threshold; rejected (response = " << fineResponse << ")\r\n";
           m_pMapper->FireLoopClosureCheck("REJECTED!");
         }
         else
         {
+          std::cout << "[RoboSAR:Mapper:TryCloseLoop] Loop closure candidate PASSED fine response threshold; accepted (response = " << fineResponse << ")\r\n";
           m_pMapper->FireBeginLoopClosure("Closing loop...");
 
           pScan->SetSensorPose(bestPose);
