@@ -48,6 +48,7 @@
 #include <boost/thread.hpp>
 #include <sys/resource.h>
 #include <assert.h>
+#include <algorithm>
 
 namespace slam_toolbox
 {
@@ -99,6 +100,7 @@ protected:
   bool shouldStartWithPoseGraph(std::string& filename, geometry_msgs::Pose2D& pose, bool& start_at_dock);
   bool shouldProcessScan(const sensor_msgs::LaserScan::ConstPtr& scan, const karto::Pose2& pose);
   std::set<std::string> getFleetStatusInfo();
+  void clearCosts(float start_x, float start_y);
 
   // pausing bits
   bool isPaused(const PausedApplication& app);
@@ -132,6 +134,7 @@ protected:
   std::unique_ptr<karto::Dataset> dataset_;
   std::map<std::string, laser_utils::LaserMetadata> lasers_;
   std::map<std::string, tf2::Transform> m_map_to_odoms_;
+  std::map<std::string, std::pair<float, float>> m_base_to_map_;
   std::map<int, tf2::Transform> m_map_to_tags_;
   std::map<int, std::pair<geometry_msgs::PoseWithCovarianceStamped, karto::LocalizedRangeScan*>> m_apriltag_to_scan_;
 
@@ -146,7 +149,7 @@ protected:
   std::vector<std::unique_ptr<boost::thread> > threads_;
   tf2::Transform map_to_odom_;
   std::string map_to_odom_child_frame_id_;
-  boost::mutex map_to_odom_mutex_, smapper_mutex_, pose_mutex_, apriltag_mutex_, map_to_tags_mutex_;
+  boost::mutex map_to_odom_mutex_, smapper_mutex_, pose_mutex_, apriltag_mutex_, map_to_tags_mutex_, m_base_to_map_mutex_;
   PausedState state_;
   nav_msgs::GetMap::Response map_;
   ProcessType processor_type_;

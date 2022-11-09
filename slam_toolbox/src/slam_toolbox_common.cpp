@@ -397,6 +397,11 @@ bool SlamToolbox::updateMap()
 
   vis_utils::toNavMap(occ_grid, map_.map);
 
+  boost::mutex::scoped_lock lock_base(m_base_to_map_mutex_);
+  for (auto& point : m_base_to_map_) {
+    clearCosts(point.second.first, point.second.second);
+  }
+
   // publish map as current
   map_.map.header.stamp = ros::Time::now();
   sst_.publish(map_.map);
@@ -460,7 +465,41 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
     tf2::Vector3( odom_to_map.getOrigin() ) ).inverse();
   map_to_odom_child_frame_id_ = odom_frame;
 
+  boost::mutex::scoped_lock lock_base(m_base_to_map_mutex_);
+  m_base_to_map_[agent_name] = std::make_pair(corrected_pose.GetX(), corrected_pose.GetY());
+
   return odom_to_map;
+}
+
+/*****************************************************************************/
+void SlamToolbox::clearCosts(float start_x, float start_y) {
+/*****************************************************************************/
+  int mx = (int)((start_y - map_.map.info.origin.position.y) / map_.map.info.resolution);
+  int my = (int)((start_x - map_.map.info.origin.position.x) / map_.map.info.resolution);
+  int cell_inflation_radius = 10;
+  ROS_INFO("Clearing costs with radius %d at (%f, %f)", cell_inflation_radius, start_x, start_y);
+  int max_i = int(map_.map.info.height);
+  int max_j = int(map_.map.info.width);
+
+  // get occupied cells in radius of point
+  int x_min = std::max(0, int(mx-cell_inflation_radius));
+  int x_max = std::min(max_i, int(mx+cell_inflation_radius));
+  int y_min = std::max(0, int(my-cell_inflation_radius));
+  int y_max = std::min(max_j, int(my+cell_inflation_radius));
+  for (int j = y_min; j < y_max; j++)
+  {
+      for (int i = x_min; i < x_max; i++)
+      {
+          int index =  i*map_.map.info.width + j;
+          unsigned char cost = map_.map.data[index];
+          if (cost >= 254)
+          {
+              ROS_WARN("Found obs");
+              map_.map.data[index] = 0;
+          }
+      }
+  }
+
 }
 
 
