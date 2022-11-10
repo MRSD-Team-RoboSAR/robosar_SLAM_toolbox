@@ -5,6 +5,8 @@
     <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
         <rosparam command="load" file="$(find slam_toolbox)/config/robosar_mapping.yaml" />
     </node>
+    <!-- Run mapping filter -->
+    <node pkg="slam_toolbox" name="map_filter" type="map_filter.py" />
     <!-- Launch RVIZ with provided configurations -->
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find slam_toolbox)/config/robosar_testing.rviz" />
 </launch>

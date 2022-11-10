@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from nav_msgs.msg import OccupancyGrid
 
-pub = rospy.Publisher('/map_filt', OccupancyGrid, queue_size=10)
+pub = rospy.Publisher('/map', OccupancyGrid, queue_size=10)
 
 def filter_map(map_msg):
   scale = map_msg.info.resolution
@@ -30,6 +30,6 @@ def filter_map(map_msg):
 
 if __name__ == '__main__':
   rospy.init_node('map_filter', anonymous=False)
-  rospy.Subscriber("/map", OccupancyGrid, filter_map)
+  rospy.Subscriber("/slam_toolbox/map", OccupancyGrid, filter_map)
   rospy.spin()
 

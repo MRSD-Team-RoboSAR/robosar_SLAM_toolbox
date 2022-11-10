@@ -7,6 +7,7 @@ ceres_dogleg_type: TRADITIONAL_DOGLEG
 ceres_loss_function: None
 
 # ROS Parameters
+map_name: map
 map_frame: map
 odom_frames: ["agent1/odom", "agent2/odom", "agent3/odom", "agent4/odom"]
 base_frames: ["agent1/base_link", "agent2/base_link", "agent3/base_link", "agent4/base_link"]
