@@ -16,9 +16,10 @@ def filter_map(map_msg):
       map_msg.data, (map_msg.info.height, map_msg.info.width))
   # Treat unknown space as occupied space; make binary
   map_filt = np.copy(raw)
-  map_filt = np.where(np.logical_or(map_filt<0, map_filt>50), 1, 0)
-  # Perform opening to remove small islands of occupied space
-  map_filt = ndimage.binary_opening(map_filt, structure=np.ones((3,3))).astype(int) * 100
+  map_filt = np.where(np.logical_or(map_filt<0, map_filt>50), 100, 0)
+  # Perform Gaussian blur, then threshold
+  map_filt = ndimage.gaussian_filter(map_filt, sigma=3)
+  map_filt = np.where(map_filt > 6, 100, 0)
   # Only update occupied cells
   map_final = np.where(raw > 50, map_filt, raw)
   # Publish new map
