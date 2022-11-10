@@ -18,6 +18,7 @@
   <build_depend>nav_msgs</build_depend>
   <build_depend>rosconsole</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
   <build_depend>sparse_bundle_adjustment</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>tf2_ros</build_depend>
@@ -44,6 +45,7 @@
   <run_depend>nav_msgs</run_depend>
   <run_depend>rosconsole</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
   <run_depend>sparse_bundle_adjustment</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>tf</run_depend>
