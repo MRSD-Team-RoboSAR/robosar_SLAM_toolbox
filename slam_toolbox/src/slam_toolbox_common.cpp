@@ -476,7 +476,7 @@ void SlamToolbox::clearCosts(float start_x, float start_y) {
 /*****************************************************************************/
   int mx = (int)((start_y - map_.map.info.origin.position.y) / map_.map.info.resolution);
   int my = (int)((start_x - map_.map.info.origin.position.x) / map_.map.info.resolution);
-  int cell_inflation_radius = 10;
+  int cell_inflation_radius = 2;
   ROS_INFO("Clearing costs with radius %d at (%f, %f)", cell_inflation_radius, start_x, start_y);
   int max_i = int(map_.map.info.height);
   int max_j = int(map_.map.info.width);
@@ -492,7 +492,7 @@ void SlamToolbox::clearCosts(float start_x, float start_y) {
       {
           int index =  i*map_.map.info.width + j;
           unsigned char cost = map_.map.data[index];
-          if (cost >= 254)
+          if (cost >= 100)
           {
               ROS_WARN("Found obs");
               map_.map.data[index] = 0;
