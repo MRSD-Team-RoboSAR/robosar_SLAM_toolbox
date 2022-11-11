@@ -14,9 +14,9 @@ def filter_map(map_msg):
   # Extract raw map
   raw = np.reshape(
       map_msg.data, (map_msg.info.height, map_msg.info.width))
-  # Treat unknown space as occupied space; make binary
+  # Treat unknown space as free space; make binary
   map_filt = np.copy(raw)
-  map_filt = np.where(np.logical_or(map_filt<0, map_filt>50), 100, 0)
+  map_filt = np.where(map_filt<50, 0, 100)
   # Perform Gaussian blur, then threshold
   map_filt = ndimage.gaussian_filter(map_filt, sigma=3)
   map_filt = np.where(map_filt > 6, 100, 0)
