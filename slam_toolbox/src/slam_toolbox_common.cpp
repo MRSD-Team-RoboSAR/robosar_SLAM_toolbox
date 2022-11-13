@@ -62,11 +62,12 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
 
   reprocessing_transform_.setIdentity();
 
-  double transform_publish_period;
+  double transform_publish_period, tag_publish_period;
   nh_.param("transform_publish_period", transform_publish_period, 0.05);
+  nh_.param("tag_publish_period", tag_publish_period, 0.5);
   threads_.push_back(std::make_unique<boost::thread>(
     boost::bind(&SlamToolbox::publishTransformLoop,
-    this, transform_publish_period)));
+    this, transform_publish_period, tag_publish_period)));
   threads_.push_back(std::make_unique<boost::thread>(
     boost::bind(&SlamToolbox::publishVisualizations, this)));
 }
@@ -218,7 +219,7 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
 }
 
 /*****************************************************************************/
-void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
+void SlamToolbox::publishTransformLoop(const double& transform_publish_period, const double &tag_publish_period)
 /*****************************************************************************/
 {
   if(transform_publish_period == 0)
@@ -227,6 +228,8 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
   }
 
   ros::Rate r(1.0 / transform_publish_period);
+  const int k = ceil(tag_publish_period / transform_publish_period);
+  int cnt = 0;
   while(ros::ok())
   {
     {
@@ -247,7 +250,9 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
       }
     }
 
+    if (cnt++ > k)
     {
+      cnt = 0;
       std::map<int, std::pair<geometry_msgs::PoseWithCovarianceStamped, karto::LocalizedRangeScan*>>::iterator iter;
       for (iter = m_apriltag_to_scan_.begin(); iter != m_apriltag_to_scan_.end(); iter++) {
         publishTagTransform(iter->first, iter->second.second->GetSensorName());

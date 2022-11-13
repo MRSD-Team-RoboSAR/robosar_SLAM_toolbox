@@ -64,7 +64,7 @@ public:
 protected:
   // threads
   void publishVisualizations();
-  void publishTransformLoop(const double& transform_publish_period);
+  void publishTransformLoop(const double &transform_publish_period, const double &tag_publish_period);
 
   // setup
   void setParams(ros::NodeHandle& nh);
