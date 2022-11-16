@@ -510,7 +510,7 @@ tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id, const 
   m.color.g = 0;
   m.color.b = 1;
   m.color.a = 1;
-  m.lifetime = ros::Duration(0); // forever
+  m.lifetime = ros::Duration(1); // forever
   tag_pub_.publish(m);
   
   return map_to_tag_msg;
