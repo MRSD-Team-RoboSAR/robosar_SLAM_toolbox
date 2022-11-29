@@ -37,7 +37,7 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
   dataset_ = std::make_unique<karto::Dataset>();
 
   status_client_ = nh_.serviceClient<robosar_messages::agent_status>("/robosar_agent_bringup_node/agent_status");
-  fleet_info_ = getFleetStatusInfo();
+  // fleet_info_ = getFleetStatusInfo();
   setParams(nh_);
   setROSInterfaces(nh_);
   setSolver(nh_);
