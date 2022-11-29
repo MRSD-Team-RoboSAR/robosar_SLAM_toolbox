@@ -9,10 +9,10 @@ ceres_loss_function: None
 # ROS Parameters
 map_name: map
 map_frame: map
-odom_frames: ["agent1/odom", "agent2/odom", "agent3/odom", "agent4/odom"]
-base_frames: ["agent1/base_link", "agent2/base_link", "agent3/base_link", "agent4/base_link"]
-laser_topics: ["/robosar_agent_bringup_node/agent1/feedback/scan", "/robosar_agent_bringup_node/agent2/feedback/scan", "/robosar_agent_bringup_node/agent3/feedback/scan", "/robosar_agent_bringup_node/agent4/feedback/scan"]
-apriltag_topics: ["/robosar_agent_bringup_node/agent1/feedback/apriltag", "/robosar_agent_bringup_node/agent2/feedback/apriltag", "/robosar_agent_bringup_node/agent3/feedback/apriltag", "/robosar_agent_bringup_node/agent4/feedback/apriltag"]
+odom_frames: ["agent1/odom", "agent2/odom", "agent3/odom", "agent4/odom", "agent5/odom"]
+base_frames: ["agent1/base_link", "agent2/base_link", "agent3/base_link", "agent4/base_link", "agent5/base_link"]
+laser_topics: ["/robosar_agent_bringup_node/agent1/feedback/scan", "/robosar_agent_bringup_node/agent2/feedback/scan", "/robosar_agent_bringup_node/agent3/feedback/scan", "/robosar_agent_bringup_node/agent4/feedback/scan", "/robosar_agent_bringup_node/agent5/feedback/scan"]
+apriltag_topics: ["/robosar_agent_bringup_node/agent1/feedback/apriltag", "/robosar_agent_bringup_node/agent2/feedback/apriltag", "/robosar_agent_bringup_node/agent3/feedback/apriltag", "/robosar_agent_bringup_node/agent4/feedback/apriltag", "/robosar_agent_bringup_node/agent5/feedback/apriltag"]
 mode: mapping
 
 # if you'd like to immediately start continuing a map at a given pose
