@@ -493,7 +493,6 @@ tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id, const 
   m.pose.position.x = pos[0];
   m.pose.position.y = pos[1];
   m.pose.position.z = pos[2];
-  tf2::Quaternion quat = map_to_tag.getRotation();
   m.pose.orientation.x = 0;
   m.pose.orientation.y = 0;
   m.pose.orientation.z = 0;
@@ -510,7 +509,21 @@ tf2::Stamped<tf2::Transform> SlamToolbox::publishTagTransform(int tag_id, const 
   m.color.g = 0;
   m.color.b = 1;
   m.color.a = 1;
-  m.lifetime = ros::Duration(1); // forever
+  m.lifetime = ros::Duration(1);
+  tag_pub_.publish(m);
+
+  // Publish id label
+  m.ns = "id_label";
+  m.id = tag_id;
+  m.type = 9; // text
+  m.scale.x *= 0.9;
+  m.scale.y *= 0.9;
+  m.pose.position.z += m.scale.z;
+  m.color.r = 0;
+  m.color.g = 0;
+  m.color.b = 0;
+  m.color.a = 1;
+  m.text = std::to_string(tag_id);
   tag_pub_.publish(m);
   
   return map_to_tag_msg;
